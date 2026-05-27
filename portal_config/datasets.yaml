@@ -1,0 +1,123 @@
+# =============================================================================
+# Data Product Portal - datasets.yaml
+# Pattern: github.com/conveyordata/data-product-portal/.../data_glossary
+# =============================================================================
+# Datasets are the INPUTS this product (and others) can read from. The Portal
+# manages who can read which dataset. A dataset is owned by one data product
+# but can be consumed by many.
+# =============================================================================
+
+datasets:
+
+  - id: ds-crm-veeva-events
+    name: crm_veeva_events
+    display_name: "CRM engagement events (Veeva)"
+    description: >
+      Raw call, email, meeting and event data captured by Veeva CRM. Source for
+      rep activity. One row per interaction. Updated every 15 minutes.
+    domain: commercial_medical
+    owner:
+      data_product: dp-crm-source
+      email: crm-platform@pharmaco.example.com
+    sensitivity: confidential
+    tags: [crm, veeva, engagement, internal]
+    storage:
+      type: s3_iceberg
+      location: "s3://pharmaco-bronze-{env}/crm/veeva/events/"
+    schema_ref: cdm/tables.md#fact_engagement_raw
+
+  - id: ds-rx-iqvia-claims
+    name: rx_iqvia_claims
+    display_name: "Prescription claims (IQVIA Xponent / Komodo)"
+    description: >
+      Licensed prescription claims feed. HCP-level, weekly refresh. Subject to
+      IQVIA license terms - see legal/contracts/iqvia-2025.pdf.
+    domain: commercial_medical
+    owner:
+      data_product: dp-rx-feed
+      email: external-data-ops@pharmaco.example.com
+    sensitivity: restricted
+    tags: [rx, claims, third-party, licensed, iqvia]
+    storage:
+      type: s3_iceberg
+      location: "s3://pharmaco-bronze-{env}/external/iqvia/xponent/"
+    schema_ref: cdm/tables.md#fact_prescription_raw
+    x-licensing:
+      vendor: IQVIA
+      contract_id: IQ-2025-MASTER
+      allowed_use: ["internal_analytics", "field_targeting"]
+      forbidden_use: ["resale", "public_disclosure"]
+
+  - id: ds-marketing-engagement
+    name: marketing_engagement
+    display_name: "Marketing channel engagement (Salesforce MC + web)"
+    description: >
+      Email opens/clicks, web sessions, webinar attendance. Joins on HCP ID and
+      cookie ID. Channel preferences applied at ingestion.
+    domain: commercial_medical
+    owner:
+      data_product: dp-marketing-platform
+      email: marketing-ops@pharmaco.example.com
+    sensitivity: confidential
+    tags: [marketing, email, web, omnichannel]
+    storage:
+      type: s3_iceberg
+      location: "s3://pharmaco-bronze-{env}/marketing/sfmc/"
+    schema_ref: cdm/tables.md#fact_engagement_raw
+
+  - id: ds-consent-onetrust
+    name: consent_onetrust
+    display_name: "Consent records (OneTrust)"
+    description: >
+      System of record for HCP consent and channel preferences. Streamed via
+      CDC. Mandatory join for any communication record.
+    domain: privacy
+    owner:
+      data_product: dp-consent
+      email: privacy-office@pharmaco.example.com
+    sensitivity: restricted
+    tags: [consent, gdpr, privacy, onetrust]
+    storage:
+      type: s3_iceberg
+      location: "s3://pharmaco-bronze-{env}/privacy/onetrust/consent/"
+    schema_ref: cdm/tables.md#dim_consent
+
+  - id: ds-medinfo-inquiries
+    name: medinfo_inquiries
+    display_name: "Medical Information inquiries"
+    description: >
+      Questions submitted to medical information centers by HCPs, with PII-
+      scrubbed text and structured topic codes. Adverse-event-suspected entries
+      forwarded to pharmacovigilance.
+    domain: medical
+    owner:
+      data_product: dp-medinfo
+      email: medinfo-platform@pharmaco.example.com
+    sensitivity: restricted
+    tags: [medical, inquiries, pv-related]
+    storage:
+      type: s3_iceberg
+      location: "s3://pharmaco-bronze-{env}/medical/medinfo/inquiries/"
+    schema_ref: cdm/tables.md#fact_medical_inquiry
+
+  # ---- reference / master data (read-only inputs) ----
+
+  - id: ds-onekey-master
+    name: onekey_hcp_hco_master
+    display_name: "IQVIA OneKey HCP/HCO master"
+    description: >
+      Licensed HCP and HCO master with affiliations, specialties, NPI/RPPS/GMC
+      cross-references. Weekly delta load.
+    domain: master_data
+    owner:
+      data_product: dp-onekey
+      email: mdm-ops@pharmaco.example.com
+    sensitivity: confidential
+    tags: [hcp, hco, master, onekey, licensed]
+    storage:
+      type: s3_iceberg
+      location: "s3://pharmaco-bronze-{env}/external/iqvia/onekey/"
+    schema_ref: cdm/tables.md#dim_hcp
+    x-licensing:
+      vendor: IQVIA
+      contract_id: IQ-2025-ONEKEY

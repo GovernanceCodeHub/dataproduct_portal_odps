@@ -1,0 +1,398 @@
+# =============================================================================
+# Open Data Product Catalog (ODPC) 1.0
+# Catalog: PharmaCo Commercial & Medical Data Products Portfolio
+# =============================================================================
+schema: https://opendataproducts.org/odpc-v1.0/schema/odpc.yaml
+version: "1.0"
+kind: Catalog
+
+catalog:
+
+  metadata:
+    id: cat-pharmaco-commercial
+    name:
+      en: "PharmaCo Commercial & Medical Data Products"
+    description:
+      en: >
+        Portfolio of governed data products supporting PharmaCo's commercial and
+        medical operations across the EU5 and the US. Includes the flagship
+        Customer 360 product and its upstream and downstream products.
+    owner:
+      organization: "PharmaCo"
+      team: "Commercial Data & Analytics"
+      role: "Portfolio Owner"
+    scope:
+      domains: ["commercial", "medical", "privacy", "master_data"]
+      geography: "US + EU5"
+      audience: ["Sales Ops", "Medical Affairs", "Marketing", "Compliance", "Data Science"]
+    version: "1.0"
+    status: active
+    graph:
+      standard: ODPG
+      version: "1.0"
+      $ref: "./odpg-pharma-c360.yaml"
+    tags: ["pharma", "hcp", "hco", "regulated", "gxp-adjacent"]
+    x-vocabulary:
+      $ref: "./odpv-pharma-extension.yaml"
+
+  productReferences:
+
+    - id: ref-dp-c360-hcp
+      productID: DP-C360-HCP-001
+      productVersion: "1.0.0"
+      name:
+        en: "Customer 360 - HCP & HCO"
+      description:
+        en: "Unified, consent-aware view of HCP/HCO engagement, Rx, ToV and segmentation."
+      valueProposition:
+        en: "One governed customer view across Sales, Medical, Marketing, Compliance."
+      visibility: internal
+      status: active
+      type: derived
+      domains: ["commercial", "medical"]
+      categories: ["customer_view", "regulated"]
+      standards: ["ODPS-4.1"]
+      tags: ["hcp", "hco", "customer360", "regulated"]
+      portfolioPriority: critical
+      governanceProfile: enforced
+      owner:
+        organization: "PharmaCo"
+        team: "Commercial Data & Analytics"
+        role: "Product Owner"
+      productModel:
+        standard: "ODPS"
+        version: "4.1"
+        format: "yaml"
+        $ref: "./odps-c360-hcp.yaml"
+      outputFileFormats: ["parquet", "iceberg", "json", "avro"]
+
+    - id: ref-dp-onekey
+      productID: DP-MDM-ONEKEY-001
+      productVersion: "2.3.0"
+      name:
+        en: "OneKey HCP/HCO master (licensed)"
+      description:
+        en: "Mastered HCP and HCO reference data sourced from IQVIA OneKey."
+      visibility: internal
+      status: active
+      type: source-aligned
+      domains: ["master_data"]
+      portfolioPriority: high
+      governanceProfile: structured
+      owner:
+        organization: "PharmaCo"
+        team: "MDM Operations"
+      productModel:
+        standard: "ODPS"
+        version: "4.1"
+        format: "yaml"
+        $ref: "./odps-onekey.yaml"
+
+    - id: ref-dp-rx-feed
+      productID: DP-RX-FEED-001
+      productVersion: "1.4.0"
+      name:
+        en: "Prescription claims feed (licensed)"
+      description:
+        en: "Third-party prescription claims, weekly load."
+      visibility: restricted
+      status: active
+      type: source-aligned
+      domains: ["commercial"]
+      portfolioPriority: high
+      governanceProfile: structured
+      owner:
+        organization: "PharmaCo"
+        team: "External Data Ops"
+      productModel:
+        standard: "ODPS"
+        version: "4.1"
+        format: "yaml"
+        $ref: "./odps-rx-feed.yaml"
+
+    - id: ref-dp-consent
+      productID: DP-CONSENT-001
+      productVersion: "1.2.0"
+      name:
+        en: "Consent records (OneTrust)"
+      description:
+        en: "System-of-record consent data streamed from OneTrust."
+      visibility: internal
+      status: active
+      type: source-aligned
+      domains: ["privacy"]
+      portfolioPriority: critical
+      governanceProfile: enforced
+      owner:
+        organization: "PharmaCo"
+        team: "Privacy Office"
+      productModel:
+        standard: "ODPS"
+        version: "4.1"
+        format: "yaml"
+        $ref: "./odps-consent.yaml"
+
+    - id: ref-dp-nba
+      productID: DP-NBA-MODEL-001
+      productVersion: "0.9.0"
+      name:
+        en: "Next-Best-Action recommendations"
+      description:
+        en: "Per-HCP per-product recommendation scores - consumes C360."
+      visibility: internal
+      status: active
+      type: derived
+      domains: ["commercial"]
+      portfolioPriority: high
+      governanceProfile: structured
+      owner:
+        organization: "PharmaCo"
+        team: "Data Science - Commercial"
+      productModel:
+        standard: "ODPS"
+        version: "4.1"
+        format: "yaml"
+        $ref: "./odps-nba.yaml"
+
+  useCases:
+
+    - id: uc-rep-targeting
+      name:
+        en: "Field rep targeting and call planning"
+      description:
+        en: >
+          Sales reps use the C360 HCP profile and NBA recommendations to plan
+          weekly calls. Includes segmentation, Rx trend, recent engagement and
+          consent state on every channel.
+      domains: ["commercial"]
+      stakeholders: ["Sales Reps", "Sales Operations", "Brand Marketing"]
+      businessChallenge:
+        en: "Rep time is scarce and prescribing behaviour varies; without a unified view, reps target sub-optimally."
+      decision:
+        en: "Which HCPs to call this week, with which message, on which channel."
+      expectedOutcome:
+        en: "+15% in priority HCP coverage, +8% in qualified call rate."
+      kpis: ["KPI-001", "KPI-003", "KPI-004"]
+      impactMetrics: ["priority HCP coverage %", "qualified call rate %"]
+      dataNeeds:
+        summary:
+          en: "Need HCP master, engagement history, segmentation, NBA scores, consent."
+        items:
+          - "dim_hcp"
+          - "fact_engagement"
+          - "fact_segmentation"
+          - "fact_nba_recommendation"
+          - "dim_consent"
+      scoring:
+        businessValue: critical
+        effort: medium
+        category: juicyAndWorthIt
+        score: 9.1
+      status: active
+      priority: critical
+      tags: ["sales", "field", "nba"]
+
+    - id: uc-msl-engagement
+      name:
+        en: "MSL KOL engagement planning"
+      description:
+        en: >
+          Medical Science Liaisons use the C360 medical-scoped view to manage
+          relationships with Key Opinion Leaders, plan scientific exchanges,
+          and track research/publication interactions.
+      domains: ["medical"]
+      stakeholders: ["MSLs", "Medical Affairs Leadership"]
+      businessChallenge:
+        en: "Fragmented view of KOL activity, with no link between inquiries and engagement."
+      decision:
+        en: "Which KOLs to engage, on which topics, when."
+      expectedOutcome:
+        en: "Reduced redundant engagement; higher KOL satisfaction."
+      kpis: ["KPI-001"]
+      impactMetrics: ["KOL coverage %", "redundant interaction %"]
+      dataNeeds:
+        summary:
+          en: "Need HCP master, engagement, medical inquiries (text), affiliations."
+        items:
+          - "dim_hcp"
+          - "fact_engagement"
+          - "fact_medical_inquiry"
+          - "dim_hcp_hco_affiliation"
+      scoring:
+        businessValue: high
+        effort: medium
+        category: juicyAndWorthIt
+        score: 7.8
+      status: active
+      priority: high
+      tags: ["medical", "kol"]
+
+    - id: uc-sunshine-act
+      name:
+        en: "Sunshine Act / EFPIA disclosure"
+      description:
+        en: >
+          Generate and submit annual transfer-of-value reports to CMS Open
+          Payments (US Sunshine Act) and EFPIA disclosure platforms (EU5).
+      domains: ["compliance"]
+      stakeholders: ["Compliance Officer", "Legal"]
+      businessChallenge:
+        en: "ToV data is fragmented across CRM, expense systems, and event tools, risking late or incorrect filings."
+      decision:
+        en: "What was transferred, to whom, when, for what purpose - in regulator-compliant format."
+      expectedOutcome:
+        en: "100% on-time, accurate filings; zero adverse findings in audit."
+      kpis: ["KPI-005"]
+      impactMetrics: ["filings on time %", "audit findings #"]
+      dataNeeds:
+        summary:
+          en: "Signed ToV ledger with full lineage."
+        items:
+          - "fact_transfer_of_value"
+          - "fact_sample_disbursement"
+          - "dim_hcp"
+          - "dim_hco"
+      scoring:
+        businessValue: critical
+        effort: low
+        category: quickWins
+        score: 9.5
+      status: active
+      priority: critical
+      tags: ["compliance", "regulated", "sunshine-act", "efpia"]
+
+    - id: uc-pv-signal
+      name:
+        en: "Adverse event linkage and signal correlation"
+      description:
+        en: >
+          Pharmacovigilance team correlates incoming PV cases with prior
+          engagement and medical inquiries to detect signal patterns earlier.
+      domains: ["medical", "safety"]
+      stakeholders: ["Pharmacovigilance", "Medical Safety"]
+      businessChallenge:
+        en: "Slow detection of safety signals when inquiry/AE data is siloed."
+      decision:
+        en: "Which interactions preceded an AE report and what patterns exist."
+      expectedOutcome:
+        en: "Mean time to first signal correlation < 24h."
+      kpis: ["REL-KPI-001"]
+      dataNeeds:
+        items:
+          - "fact_adverse_event_link"
+          - "fact_medical_inquiry"
+          - "fact_engagement"
+      scoring:
+        businessValue: critical
+        effort: medium
+        category: juicyAndWorthIt
+        score: 8.7
+      status: active
+      priority: critical
+      tags: ["pv", "safety", "regulated"]
+
+  businessObjectives:
+
+    - id: bo-commercial-excellence
+      name:
+        en: "Commercial Excellence FY2026"
+      description:
+        en: "Lift commercial productivity and customer engagement quality."
+      strategicAlignment:
+        - en: "Become a customer-centric commercial organization."
+      owner:
+        organization: "PharmaCo"
+        team: "Commercial Leadership"
+      expectedOutcomes:
+        - en: "+15% Commercial Field Productivity Index."
+        - en: "+10% market share in top-3 brands."
+      kpis:
+        - id: KPI-COMM-001
+          name:
+            en: "Commercial Field Productivity Index"
+          unit: "index_score"
+          target:
+            value: 115
+            date: "2026-12-31"
+      timeframe:
+        startDate: "2026-01-01"
+        endDate: "2026-12-31"
+      status: active
+      priority: critical
+
+    - id: bo-regulatory-excellence
+      name:
+        en: "Regulatory & Compliance Excellence"
+      description:
+        en: "Zero adverse audit findings across Sunshine Act, EFPIA, GDPR, HIPAA."
+      strategicAlignment:
+        - en: "Operate with regulatory excellence."
+      owner:
+        organization: "PharmaCo"
+        team: "Compliance"
+      expectedOutcomes:
+        - en: "100% on-time regulatory filings."
+        - en: "Zero adverse audit findings."
+      timeframe:
+        startDate: "2026-01-01"
+        endDate: "2026-12-31"
+      status: active
+      priority: critical
+
+  signals:
+
+    - id: sig-consent-decay-eu5
+      name:
+        en: "Consent freshness decay across EU5"
+      description:
+        en: >
+          OneTrust shows consent re-confirmation lag increasing in Germany and
+          France, putting outbound campaigns at GDPR risk by Q3.
+      type: risk
+      source:
+        origin: internal
+        method: monitoring
+        system: OneTrust
+        channel: api
+      observedAt: "2026-05-12T09:00:00Z"
+      strength: high
+      confidence: high
+      opportunity:
+        en: "Launch HCP-facing consent renewal campaign in DE/FR before Q3."
+      impact:
+        valuePotential: high
+        urgency: high
+        affectedDomains: ["commercial", "privacy"]
+      evidence:
+        summary:
+          en: "Re-confirmation rate down 14pp in DE, 9pp in FR over 8 weeks."
+        examples: ["onetrust-trend-2026w20"]
+      recommendedAction:
+        en: "Run targeted re-consent campaign through medical channels."
+      status: reviewing
+      tags: ["consent", "gdpr", "eu5"]
+
+    - id: sig-rx-feed-lag
+      name:
+        en: "IQVIA Rx feed latency drift"
+      description:
+        en: >
+          IQVIA Xponent weekly load arriving 36-48h later than SLA in 3 of last
+          5 weeks; degrades NBA freshness.
+      type: quality
+      source:
+        origin: external
+        method: monitoring
+        system: airflow
+        channel: dag_metrics
+      observedAt: "2026-05-20T17:30:00Z"
+      strength: medium
+      confidence: high
+      impact:
+        valuePotential: medium
+        urgency: medium
+        affectedDomains: ["commercial"]
+      recommendedAction:
+        en: "Escalate to IQVIA delivery, consider buffer in NBA scoring window."
+      status: new
+      tags: ["rx", "freshness", "iqvia"]

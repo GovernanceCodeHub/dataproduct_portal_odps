@@ -1,0 +1,102 @@
+# =============================================================================
+# Data Product Portal - data_product_glossary.yaml
+# Pattern: github.com/conveyordata/data-product-portal/.../data_product_glossary
+# =============================================================================
+# This file is the Portal's native config: registers the data products that the
+# Portal will provision platform resources for (IAM, S3 prefixes, Glue DBs,
+# Unity Catalog grants, Snowflake roles). The Portal's Terraform layer reads
+# this file via the Portal API.
+# =============================================================================
+
+data_products:
+
+  - id: dp-c360-hcp
+    name: customer_360_hcp_hco
+    display_name: "Customer 360 - HCP & HCO"
+    description: >
+      Unified, consent-aware view of every HCP and HCO PharmaCo interacts with.
+      Joins CRM engagement, third-party Rx, ToV ledger, consent and segmentation
+      into a single governed product for Sales, Medical, Marketing, Compliance.
+    domain: commercial_medical
+    owner:
+      department: commercial_data_analytics
+      email: c360-stewards@pharmaco.example.com
+    business_owner:
+      name: "Director, Commercial Analytics"
+      email: comm-analytics-director@pharmaco.example.com
+    tags:
+      - hcp
+      - hco
+      - customer-360
+      - regulated
+      - sunshine-act
+      - efpia
+      - gdpr
+
+    lifecycle:
+      status: active
+      created: "2026-01-15"
+      version: "1.0.0"
+
+    # Datasets the product CONSUMES (input data this product reads).
+    # Each entry must exist in datasets.yaml.
+    input_datasets:
+      - ds-crm-veeva-events
+      - ds-rx-iqvia-claims
+      - ds-marketing-engagement
+      - ds-consent-onetrust
+      - ds-medinfo-inquiries
+
+    # Outputs this product EXPOSES. Defined in data_outputs.yaml.
+    data_outputs:
+      - do-c360-hcp-curated
+      - do-c360-engagement-stream
+      - do-c360-tov-ledger
+
+    # Environments the Portal will provision for this product.
+    environments:
+      - name: dev
+        region: eu-west-1
+      - name: tst
+        region: eu-west-1
+      - name: prd
+        region: eu-west-1
+      - name: prd-us
+        region: us-east-1   # US data stays in US
+
+    # Access scopes - the Portal translates these into IAM/Unity/Snowflake roles
+    access_scopes:
+      - name: c360_read_commercial
+        description: "Sales ops, brand teams. Excludes AE linkage & inquiry text."
+        members_group: pharmaco-sales-analytics
+      - name: c360_read_medical
+        description: "Medical Affairs and MSL ops."
+        members_group: pharmaco-medical-affairs
+      - name: c360_read_compliance
+        description: "Compliance, audit. Adds full ToV ledger."
+        members_group: pharmaco-compliance
+      - name: c360_read_pv
+        description: "Pharmacovigilance only. Adds adverse-event linkage."
+        members_group: pharmaco-pv-ops
+
+    # Tooling - what the Portal will wire up for this product
+    tooling:
+      - databricks_workspace
+      - athena_workgroup
+      - snowflake_role
+      - airflow_dag_namespace
+      - collibra_asset
+
+    # Pharma-specific x-extensions (the Portal allows arbitrary x- fields)
+    x-pharma:
+      regulated: true
+      regulations:
+        - sunshine_act
+        - efpia_disclosure_code
+        - gdpr
+        - hipaa
+      data_residency:
+        eu: eu-west-1
+        us: us-east-1
+      pseudonymization_required: true
+      consent_source_of_truth: onetrust

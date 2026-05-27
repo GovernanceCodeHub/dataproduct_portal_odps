@@ -1,0 +1,110 @@
+# =============================================================================
+# Data Product Portal - data_outputs.yaml
+# Pattern: github.com/conveyordata/data-product-portal/.../data_glossary
+# =============================================================================
+# Data outputs are what the C360 product EXPOSES for other products & consumers
+# to use. The Portal grants/denies access at the data_output level, mediated
+# through access_scopes defined in data_product_glossary.yaml.
+# =============================================================================
+
+data_outputs:
+
+  - id: do-c360-hcp-curated
+    name: c360_hcp_curated
+    display_name: "C360 - HCP curated tables (gold)"
+    description: >
+      Curated, joined, consent-filtered HCP-centric tables. The primary "table"
+      output surface for analytics and BI tools. Includes dim_hcp, dim_hco,
+      dim_hcp_hco_affiliation, fact_engagement, fact_prescription (segmented
+      by access scope), fact_segmentation, fact_nba_recommendation.
+    owned_by_data_product: dp-c360-hcp
+    output_type: tables
+    surface:
+      - type: glue_database
+        ref: "c360_hcp_gold_{env}"
+      - type: unity_catalog_schema
+        ref: "pharmaco_gold.c360_hcp"
+      - type: snowflake_share
+        ref: "PHARMACO_C360_GOLD.HCP"
+      - type: athena_workgroup
+        ref: "c360-consumers-{env}"
+    access_scopes_allowed:
+      - c360_read_commercial
+      - c360_read_medical
+      - c360_read_compliance
+      - c360_read_pv
+    sla:
+      freshness_minutes: 60
+      availability_pct: 99.5
+    contains_pii: true
+    pii_handling: "Patient join column is pseudonymized SHA-256, salt rotated quarterly."
+
+  - id: do-c360-engagement-stream
+    name: c360_engagement_stream
+    display_name: "C360 - real-time engagement stream"
+    description: >
+      Kinesis/Kafka stream of normalized engagement events (rep call, email,
+      web, sample, event) emitted within 60s of source capture. Consumed by
+      the NBA model and the rep mobile app.
+    owned_by_data_product: dp-c360-hcp
+    output_type: stream
+    surface:
+      - type: kinesis_stream
+        ref: "pharmaco-c360-engagement-{env}"
+      - type: kafka_topic
+        ref: "pharmaco.c360.engagement.v1"
+    access_scopes_allowed:
+      - c360_read_commercial
+      - c360_read_medical
+    sla:
+      end_to_end_latency_seconds: 60
+      availability_pct: 99.9
+    schema_registry: "confluent://pharmaco/c360/engagement/v1"
+
+  - id: do-c360-tov-ledger
+    name: c360_tov_ledger
+    display_name: "C360 - Transfer-of-Value ledger (regulated)"
+    description: >
+      Append-only, signed ledger of every HCP transfer of value. Used to
+      generate US Sunshine Act (Open Payments) and EFPIA disclosure reports.
+      Frozen monthly with cryptographic signature.
+    owned_by_data_product: dp-c360-hcp
+    output_type: tables
+    surface:
+      - type: glue_database
+        ref: "c360_tov_{env}"
+      - type: s3_signed_archive
+        ref: "s3://pharmaco-regulated-{env}/tov/"
+    access_scopes_allowed:
+      - c360_read_compliance
+    sla:
+      freshness_minutes: 1440      # daily
+      availability_pct: 99.9
+      retention_years: 10
+    audit:
+      sign_with: "kms:alias/pharmaco-tov-signer"
+      attestation_frequency: monthly
+    contains_pii: true
+
+  # API exposure (not a table, exposed as REST)
+  - id: do-c360-hcp-api
+    name: c360_hcp_api
+    display_name: "C360 HCP profile API"
+    description: >
+      Read-only REST API serving a single HCP's 360 profile. Backed by a
+      DynamoDB cache populated from c360_hcp_curated. Used by the field rep
+      mobile app and the Veeva embedded panel.
+    owned_by_data_product: dp-c360-hcp
+    output_type: api
+    surface:
+      - type: api_gateway
+        ref: "https://api.pharmaco.example.com/c360/v1/hcp/{id}"
+    access_scopes_allowed:
+      - c360_read_commercial
+      - c360_read_medical
+    sla:
+      p95_latency_ms: 250
+      availability_pct: 99.9
+    auth:
+      type: oauth2
+      scopes: ["c360.read"]

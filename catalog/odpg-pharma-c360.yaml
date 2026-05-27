@@ -1,0 +1,360 @@
+# =============================================================================
+# Open Data Product Graph (ODPG) 1.0
+# Graph: PharmaCo Customer 360 ecosystem
+# =============================================================================
+schema: https://opendataproducts.org/odpg-v1.0/schema/odpg.yaml
+version: "1.0"
+kind: Graph
+
+graph:
+
+  metadata:
+    id: GRAPH-PHARMACO-C360-001
+    name:
+      en: "PharmaCo Customer 360 Value Graph"
+    description:
+      en: >
+        Graph connecting PharmaCo's Customer 360 product to its upstream and
+        downstream products, the use cases it supports, business objectives,
+        KPIs, governance policies, and the AI agents that consume it.
+    domain:
+      en: "Commercial, Medical, Compliance"
+    purpose:
+      en: >
+        Enable GraphRAG-style discovery, impact analysis ("if Rx feed breaks,
+        what is affected?"), and AI-assisted use-case planning across the
+        commercial portfolio.
+    tags: ["pharma", "c360", "hcp", "commercial", "compliance"]
+    status: active
+    visibility: internal
+    owner:
+      name: "PharmaCo Commercial Data & Analytics"
+      email: c360-stewards@pharmaco.example.com
+
+  nodes:
+
+    # ---- Data Products ------------------------------------------------------
+    - id: dp-c360-hcp
+      type: DataProduct
+      $ref: "./odps-c360-hcp.yaml"
+    - id: dp-onekey
+      type: DataProduct
+      $ref: "./odps-onekey.yaml"
+    - id: dp-rx-feed
+      type: DataProduct
+      $ref: "./odps-rx-feed.yaml"
+    - id: dp-consent
+      type: DataProduct
+      $ref: "./odps-consent.yaml"
+    - id: dp-nba
+      type: DataProduct
+      $ref: "./odps-nba.yaml"
+    - id: dp-medinfo
+      type: DataProduct
+      $ref: "./odps-medinfo.yaml"
+
+    # ---- Datasets (Portal-side inputs) --------------------------------------
+    - id: ds-onekey-master
+      type: Dataset
+      $ref: "../portal_config/datasets.yaml#ds-onekey-master"
+    - id: ds-rx-iqvia-claims
+      type: Dataset
+      $ref: "../portal_config/datasets.yaml#ds-rx-iqvia-claims"
+    - id: ds-consent-onetrust
+      type: Dataset
+      $ref: "../portal_config/datasets.yaml#ds-consent-onetrust"
+    - id: ds-crm-veeva-events
+      type: Dataset
+      $ref: "../portal_config/datasets.yaml#ds-crm-veeva-events"
+
+    # ---- APIs / outputs -----------------------------------------------------
+    - id: api-c360-hcp
+      type: API
+      $ref: "../portal_config/data_outputs.yaml#do-c360-hcp-api"
+
+    # ---- Use cases ----------------------------------------------------------
+    - id: uc-rep-targeting
+      type: UseCase
+      $ref: "./odpc-pharma-commercial.yaml#uc-rep-targeting"
+    - id: uc-msl-engagement
+      type: UseCase
+      $ref: "./odpc-pharma-commercial.yaml#uc-msl-engagement"
+    - id: uc-sunshine-act
+      type: UseCase
+      $ref: "./odpc-pharma-commercial.yaml#uc-sunshine-act"
+    - id: uc-pv-signal
+      type: UseCase
+      $ref: "./odpc-pharma-commercial.yaml#uc-pv-signal"
+
+    # ---- Business objectives ------------------------------------------------
+    - id: bo-commercial-excellence
+      type: BusinessObjective
+      $ref: "./odpc-pharma-commercial.yaml#bo-commercial-excellence"
+    - id: bo-regulatory-excellence
+      type: BusinessObjective
+      $ref: "./odpc-pharma-commercial.yaml#bo-regulatory-excellence"
+
+    # ---- KPIs ---------------------------------------------------------------
+    - id: kpi-001-hcp-coverage
+      type: KPI
+      $ref: "./odps-c360-hcp.yaml#KPI-001"
+    - id: kpi-002-consent-currency
+      type: KPI
+      $ref: "./odps-c360-hcp.yaml#KPI-002"
+    - id: kpi-003-rep-adoption
+      type: KPI
+      $ref: "./odps-c360-hcp.yaml#KPI-003"
+    - id: kpi-004-nba-precision
+      type: KPI
+      $ref: "./odps-c360-hcp.yaml#KPI-004"
+    - id: kpi-005-tov-timeliness
+      type: KPI
+      $ref: "./odps-c360-hcp.yaml#KPI-005"
+
+    # ---- Policies (governance / regulatory) ---------------------------------
+    - id: pol-gdpr
+      type: Policy
+      $ref: "./policies/gdpr.yaml"
+    - id: pol-hipaa
+      type: Policy
+      $ref: "./policies/hipaa.yaml"
+    - id: pol-sunshine-act
+      type: Policy
+      $ref: "./policies/sunshine-act.yaml"
+    - id: pol-efpia
+      type: Policy
+      $ref: "./policies/efpia-code.yaml"
+    - id: pol-iqvia-license
+      type: Policy
+      $ref: "./policies/iqvia-license.yaml"
+
+    # ---- Domains ------------------------------------------------------------
+    - id: dom-commercial
+      type: Domain
+      $ref: "./domains/commercial.yaml"
+    - id: dom-medical
+      type: Domain
+      $ref: "./domains/medical.yaml"
+    - id: dom-privacy
+      type: Domain
+      $ref: "./domains/privacy.yaml"
+    - id: dom-compliance
+      type: Domain
+      $ref: "./domains/compliance.yaml"
+
+    # ---- Agents (AI / downstream automation) --------------------------------
+    - id: agent-field-rep-copilot
+      type: Agent
+      $ref: "./agents/field-rep-copilot.yaml"
+    - id: agent-msl-assistant
+      type: Agent
+      $ref: "./agents/msl-assistant.yaml"
+
+    # ---- Strategic opportunities --------------------------------------------
+    - id: opp-eu5-consent-renewal
+      type: StrategicOpportunity
+      $ref: "./odpc-pharma-commercial.yaml#sig-consent-decay-eu5"
+
+  edges:
+
+    # ---- C360 consumes upstream products ------------------------------------
+    - from: dp-c360-hcp
+      to: dp-onekey
+      type: consumes
+      confidence: high
+    - from: dp-c360-hcp
+      to: dp-rx-feed
+      type: consumes
+      confidence: high
+    - from: dp-c360-hcp
+      to: dp-consent
+      type: consumes
+      confidence: high
+    - from: dp-c360-hcp
+      to: dp-medinfo
+      type: consumes
+      confidence: high
+    - from: dp-c360-hcp
+      to: ds-crm-veeva-events
+      type: consumes
+      confidence: high
+
+    # ---- Downstream products consume C360 ----------------------------------
+    - from: dp-nba
+      to: dp-c360-hcp
+      type: consumes
+      confidence: high
+    - from: dp-nba
+      to: dp-c360-hcp
+      type: dependsOn
+      confidence: high
+
+    # ---- C360 exposes the HCP API ------------------------------------------
+    - from: dp-c360-hcp
+      to: api-c360-hcp
+      type: exposes
+      confidence: high
+
+    # ---- Use cases use products --------------------------------------------
+    - from: uc-rep-targeting
+      to: dp-c360-hcp
+      type: uses
+      confidence: high
+    - from: uc-rep-targeting
+      to: dp-nba
+      type: uses
+      confidence: high
+    - from: uc-msl-engagement
+      to: dp-c360-hcp
+      type: uses
+      confidence: high
+    - from: uc-msl-engagement
+      to: dp-medinfo
+      type: uses
+      confidence: medium
+    - from: uc-sunshine-act
+      to: dp-c360-hcp
+      type: uses
+      confidence: high
+    - from: uc-pv-signal
+      to: dp-c360-hcp
+      type: uses
+      confidence: high
+    - from: uc-pv-signal
+      to: dp-medinfo
+      type: uses
+      confidence: high
+
+    # ---- Use cases support business objectives -----------------------------
+    - from: uc-rep-targeting
+      to: bo-commercial-excellence
+      type: supports
+      confidence: high
+    - from: uc-msl-engagement
+      to: bo-commercial-excellence
+      type: supports
+      confidence: medium
+    - from: uc-sunshine-act
+      to: bo-regulatory-excellence
+      type: supports
+      confidence: high
+    - from: uc-pv-signal
+      to: bo-regulatory-excellence
+      type: supports
+      confidence: high
+
+    # ---- KPIs measure / track products and use cases -----------------------
+    - from: kpi-001-hcp-coverage
+      to: dp-c360-hcp
+      type: measures
+      confidence: high
+    - from: kpi-002-consent-currency
+      to: dp-c360-hcp
+      type: measures
+      confidence: high
+    - from: kpi-003-rep-adoption
+      to: uc-rep-targeting
+      type: tracks
+      confidence: high
+    - from: kpi-004-nba-precision
+      to: dp-nba
+      type: measures
+      confidence: high
+    - from: kpi-005-tov-timeliness
+      to: uc-sunshine-act
+      type: tracks
+      confidence: high
+
+    # ---- KPIs contribute to objectives -------------------------------------
+    - from: kpi-001-hcp-coverage
+      to: bo-commercial-excellence
+      type: contributesTo
+      confidence: high
+    - from: kpi-003-rep-adoption
+      to: bo-commercial-excellence
+      type: contributesTo
+      confidence: high
+    - from: kpi-004-nba-precision
+      to: bo-commercial-excellence
+      type: contributesTo
+      confidence: medium
+    - from: kpi-005-tov-timeliness
+      to: bo-regulatory-excellence
+      type: contributesTo
+      confidence: high
+
+    # ---- Governance: product governed by policies --------------------------
+    - from: dp-c360-hcp
+      to: pol-gdpr
+      type: governedBy
+      confidence: high
+    - from: dp-c360-hcp
+      to: pol-hipaa
+      type: governedBy
+      confidence: high
+    - from: dp-c360-hcp
+      to: pol-sunshine-act
+      type: governedBy
+      confidence: high
+    - from: dp-c360-hcp
+      to: pol-efpia
+      type: governedBy
+      confidence: high
+    - from: dp-rx-feed
+      to: pol-iqvia-license
+      type: governedBy
+      confidence: high
+    - from: dp-c360-hcp
+      to: pol-iqvia-license
+      type: governedBy
+      confidence: high
+
+    # ---- Domain alignment ---------------------------------------------------
+    - from: dp-c360-hcp
+      to: dom-commercial
+      type: alignsWith
+      confidence: high
+    - from: dp-c360-hcp
+      to: dom-medical
+      type: alignsWith
+      confidence: high
+    - from: dp-c360-hcp
+      to: dom-privacy
+      type: alignsWith
+      confidence: high
+    - from: dp-c360-hcp
+      to: dom-compliance
+      type: alignsWith
+      confidence: high
+
+    # ---- Agents consume products -------------------------------------------
+    - from: agent-field-rep-copilot
+      to: api-c360-hcp
+      type: consumes
+      confidence: high
+    - from: agent-field-rep-copilot
+      to: dp-nba
+      type: consumes
+      confidence: high
+    - from: agent-msl-assistant
+      to: dp-c360-hcp
+      type: consumes
+      confidence: high
+    - from: agent-msl-assistant
+      to: dp-medinfo
+      type: consumes
+      confidence: high
+
+    # ---- Signals identify opportunities affecting products -----------------
+    - from: opp-eu5-consent-renewal
+      to: dp-c360-hcp
+      type: impacts
+      confidence: high
+    - from: opp-eu5-consent-renewal
+      to: dp-consent
+      type: identifies
+      confidence: high
+    - from: opp-eu5-consent-renewal
+      to: kpi-002-consent-currency
+      type: relatedTo
+      confidence: high
