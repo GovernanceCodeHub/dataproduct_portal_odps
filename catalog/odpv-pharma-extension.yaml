@@ -1,0 +1,414 @@
+# =============================================================================
+# Open Data Product Vocabulary (ODPV) 1.0 - Pharma Extension
+# Pharma-specific terms layered on top of ODPV Core
+# =============================================================================
+schema: https://opendataproducts.org/odpv-v1.0/schema/odpv.schema.json
+version: 1.0.0
+id: ODPV-PHARMA-EXT
+name:
+  en: "Open Data Product Vocabulary - Pharma Extension"
+description:
+  en: >
+    A pharma industry extension to the ODPV core vocabulary. Defines stable
+    terms for HCPs, HCOs, prescribing, transfer of value, consent in regulated
+    contexts, and pharmacovigilance. Aligns with HL7 FHIR roles where useful
+    and with US Sunshine Act / EU EFPIA Disclosure Code definitions where
+    regulatorily appropriate.
+
+license:
+  name: Apache 2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+
+publisher:
+  name: "PharmaCo Data Office (proposed contribution to OpenDataProducts.org)"
+  url: https://pharmaco.example.com/data-office
+
+extendsVocabulary:
+  - id: ODPV
+    version: 1.0.0
+    url: https://opendataproducts.org/odpv-v1.0/
+
+sections:
+
+  - id: pharma-customer
+    name:
+      en: "Pharma Customer Entities"
+    description:
+      en: "Core entities representing pharma 'customers' - HCPs, HCOs, payers."
+    terms:
+
+      - id: HealthcareProfessional
+        uri: https://pharmaco.example.com/odpv-pharma/terms/HealthcareProfessional
+        type: entity
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Healthcare Professional (HCP)"
+        definition:
+          en: >
+            An individual licensed to practice in a healthcare role - including
+            physicians, nurse practitioners, physician assistants, pharmacists,
+            and dentists - and treated as an addressable customer by
+            pharmaceutical commercial and medical functions.
+        alsoKnownAs:
+          en: ["HCP", "prescriber", "clinician", "provider"]
+        relatedTerms: ["HealthcareOrganization", "HCPAffiliation", "Prescriber"]
+        usedIn: ["ODPS", "ODPC", "ODPG"]
+        identifiers:
+          - name: "NPI"
+            jurisdiction: "US"
+            description: "10-digit National Provider Identifier (CMS)"
+          - name: "RPPS"
+            jurisdiction: "FR"
+            description: "Repertoire Partage des Professionnels de Sante"
+          - name: "GMC"
+            jurisdiction: "UK"
+            description: "General Medical Council number"
+          - name: "OneKey"
+            jurisdiction: "global"
+            description: "IQVIA OneKey ID (licensed master)"
+        examples:
+          en:
+            - "Dr. A. Smith (NPI 1234567890) is a HealthcareProfessional in the cardiology specialty."
+
+      - id: HealthcareOrganization
+        uri: https://pharmaco.example.com/odpv-pharma/terms/HealthcareOrganization
+        type: entity
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Healthcare Organization (HCO)"
+        definition:
+          en: >
+            A legal entity providing healthcare services - hospitals, clinics,
+            pharmacies, group practices, integrated delivery networks - that
+            HCPs are affiliated with and that may directly receive transfers of
+            value from pharmaceutical companies.
+        alsoKnownAs:
+          en: ["HCO", "provider organization", "health system"]
+        relatedTerms: ["HealthcareProfessional", "HCPAffiliation", "ClassOfTrade"]
+        usedIn: ["ODPS", "ODPC", "ODPG"]
+        examples:
+          en:
+            - "Massachusetts General Hospital is a HealthcareOrganization of type 'hospital'."
+
+      - id: HCPAffiliation
+        uri: https://pharmaco.example.com/odpv-pharma/terms/HCPAffiliation
+        type: relationship
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "HCP-HCO Affiliation"
+        definition:
+          en: >
+            A time-bounded relationship between a HealthcareProfessional and a
+            HealthcareOrganization describing the nature of the professional's
+            engagement (attending, consulting, employed, privileges).
+        relatedTerms: ["HealthcareProfessional", "HealthcareOrganization"]
+        usedIn: ["ODPS"]
+
+      - id: KeyOpinionLeader
+        uri: https://pharmaco.example.com/odpv-pharma/terms/KeyOpinionLeader
+        type: entity
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Key Opinion Leader (KOL)"
+        definition:
+          en: >
+            A HealthcareProfessional who influences peers through research,
+            publications, advisory roles, or speaking engagements. Subset of
+            HealthcareProfessional with associated influence metadata.
+        alsoKnownAs:
+          en: ["KOL", "thought leader", "DOL (Digital Opinion Leader)"]
+        relatedTerms: ["HealthcareProfessional"]
+        usedIn: ["ODPC"]
+
+  - id: pharma-interactions
+    name:
+      en: "Pharma Interactions and Outcomes"
+    description:
+      en: "Terms describing how pharma engages with customers and the outcomes."
+    terms:
+
+      - id: Engagement
+        uri: https://pharmaco.example.com/odpv-pharma/terms/Engagement
+        type: event
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Engagement"
+        definition:
+          en: >
+            A single recorded interaction between a pharmaceutical company
+            representative (sales rep, MSL, medical information specialist) and
+            a HealthcareProfessional or HealthcareOrganization, through any
+            channel (in-person, virtual, email, web, event).
+        relatedTerms: ["NextBestAction", "Consent", "TransferOfValue"]
+        usedIn: ["ODPS", "ODPG"]
+        examples:
+          en:
+            - "A 20-minute virtual call between an MSL and a cardiology HCP discussing trial data."
+
+      - id: Prescription
+        uri: https://pharmaco.example.com/odpv-pharma/terms/Prescription
+        type: event
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Prescription"
+        definition:
+          en: >
+            A medication order written by a prescriber for an individual
+            patient, observed via licensed third-party claims data and used by
+            pharma for commercial analytics under contract.
+        alsoKnownAs:
+          en: ["Rx", "Rx claim", "prescription claim"]
+        relatedTerms: ["HealthcareProfessional", "Product", "PatientPseudoID"]
+        usedIn: ["ODPS"]
+
+      - id: SampleDisbursement
+        uri: https://pharmaco.example.com/odpv-pharma/terms/SampleDisbursement
+        type: event
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Sample Disbursement"
+        definition:
+          en: >
+            The act of providing a drug sample (or starter pack) to a HCP,
+            including type, quantity, signature evidence, and Sunshine Act /
+            EFPIA reportability flag.
+        relatedTerms: ["TransferOfValue", "HealthcareProfessional"]
+        usedIn: ["ODPS"]
+
+      - id: NextBestAction
+        uri: https://pharmaco.example.com/odpv-pharma/terms/NextBestAction
+        type: recommendation
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Next Best Action"
+        definition:
+          en: >
+            A ranked, channel-aware recommendation for a HCP at a point in time,
+            produced by a model consuming engagement history, prescribing,
+            segmentation and consent state.
+        alsoKnownAs:
+          en: ["NBA", "next best move", "suggested action"]
+        relatedTerms: ["Engagement", "Segmentation"]
+        usedIn: ["ODPS"]
+
+      - id: MedicalInquiry
+        uri: https://pharmaco.example.com/odpv-pharma/terms/MedicalInquiry
+        type: event
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Medical Inquiry"
+        definition:
+          en: >
+            A scientific or medical question submitted by a HCP to a pharma
+            medical information function, with a recorded response. May trigger
+            a pharmacovigilance handoff if an adverse event is suspected.
+        relatedTerms: ["AdverseEvent", "HealthcareProfessional"]
+        usedIn: ["ODPS"]
+
+  - id: pharma-regulatory
+    name:
+      en: "Pharma Regulatory & Consent Terms"
+    description:
+      en: "Terms for regulatory disclosures, consent, and pharmacovigilance."
+    terms:
+
+      - id: TransferOfValue
+        uri: https://pharmaco.example.com/odpv-pharma/terms/TransferOfValue
+        type: event
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Transfer of Value (ToV)"
+        definition:
+          en: >
+            Any transfer of monetary or non-monetary value from a pharmaceutical
+            manufacturer to a HCP or HCO that is reportable under the US
+            Physician Payments Sunshine Act (CMS Open Payments) or the EU EFPIA
+            Disclosure Code, including meals, honoraria, consulting fees, travel
+            reimbursement, and research grants.
+        alsoKnownAs:
+          en: ["ToV", "transfer of value", "Open Payments record"]
+        relatedTerms: ["SampleDisbursement", "SunshineAct", "EFPIADisclosure"]
+        usedIn: ["ODPS"]
+        regulations:
+          - name: "US Physician Payments Sunshine Act"
+            citation: "42 U.S.C. 1320a-7h"
+          - name: "EFPIA Disclosure Code"
+            citation: "EFPIA Code on Disclosure of Transfers of Value (2014, rev.)"
+
+      - id: SunshineAct
+        uri: https://pharmaco.example.com/odpv-pharma/terms/SunshineAct
+        type: regulation
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Sunshine Act (US)"
+        definition:
+          en: >
+            The US federal statute (Section 6002 of the Affordable Care Act)
+            requiring applicable manufacturers to report payments and transfers
+            of value to physicians and teaching hospitals to CMS, published as
+            Open Payments.
+        usedIn: ["ODPG"]
+
+      - id: EFPIADisclosure
+        uri: https://pharmaco.example.com/odpv-pharma/terms/EFPIADisclosure
+        type: regulation
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "EFPIA Disclosure Code"
+        definition:
+          en: >
+            The European Federation of Pharmaceutical Industries and
+            Associations code requiring annual disclosure of transfers of value
+            from pharmaceutical companies to HCPs and HCOs in EU member states.
+        usedIn: ["ODPG"]
+
+      - id: Consent
+        uri: https://pharmaco.example.com/odpv-pharma/terms/Consent
+        type: record
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Consent"
+        definition:
+          en: >
+            A recorded permission from a data subject (typically an HCP)
+            authorizing a specific data processing purpose and channel, with
+            timestamps, jurisdiction, and revocable status. In pharma, consent
+            is tracked per channel (email, phone, SMS, in-person) and per
+            purpose (marketing, scientific exchange, regulatory).
+        alsoKnownAs:
+          en: ["opt-in", "permission", "channel consent"]
+        relatedTerms: ["GDPR", "Engagement"]
+        usedIn: ["ODPS"]
+
+      - id: AdverseEvent
+        uri: https://pharmaco.example.com/odpv-pharma/terms/AdverseEvent
+        type: event
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Adverse Event (AE)"
+        definition:
+          en: >
+            Any untoward medical occurrence associated with the use of a drug
+            in humans, whether or not considered drug-related. Subject to
+            mandatory pharmacovigilance reporting timelines.
+        alsoKnownAs:
+          en: ["AE", "adverse drug reaction", "ADR"]
+        relatedTerms: ["MedicalInquiry", "Pharmacovigilance"]
+        usedIn: ["ODPC", "ODPG"]
+
+      - id: Pharmacovigilance
+        uri: https://pharmaco.example.com/odpv-pharma/terms/Pharmacovigilance
+        type: process
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Pharmacovigilance"
+        definition:
+          en: >
+            The science and activities relating to the detection, assessment,
+            understanding, and prevention of adverse effects or any other drug-
+            related problem. In data terms, a tightly access-controlled domain
+            with audited handoffs from medical information and engagement.
+        alsoKnownAs:
+          en: ["PV", "drug safety"]
+        relatedTerms: ["AdverseEvent", "MedicalInquiry"]
+        usedIn: ["ODPC", "ODPG"]
+
+  - id: pharma-data-traits
+    name:
+      en: "Pharma Data Traits and Identifiers"
+    description:
+      en: "Cross-cutting terms used in attributes and identifiers."
+    terms:
+
+      - id: PatientPseudoID
+        uri: https://pharmaco.example.com/odpv-pharma/terms/PatientPseudoID
+        type: identifier
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Patient Pseudonymous ID"
+        definition:
+          en: >
+            A one-way hashed identifier (e.g. salted SHA-256) representing a
+            patient for analytics without permitting re-identification. The
+            crosswalk from PatientPseudoID to identified patient is held in a
+            separately governed system never exposed by Customer 360.
+        relatedTerms: ["Prescription"]
+        usedIn: ["ODPS"]
+
+      - id: ClassOfTrade
+        uri: https://pharmaco.example.com/odpv-pharma/terms/ClassOfTrade
+        type: attribute
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Class of Trade"
+        definition:
+          en: >
+            Categorization of a HCO by its commercial channel (academic medical
+            center, integrated delivery network, community hospital, retail
+            pharmacy, etc.) used for contracting, pricing and analytics.
+        alsoKnownAs:
+          en: ["COT"]
+        relatedTerms: ["HealthcareOrganization"]
+        usedIn: ["ODPS"]
+
+      - id: TerritoryAlignment
+        uri: https://pharmaco.example.com/odpv-pharma/terms/TerritoryAlignment
+        type: attribute
+        status: stable
+        introducedIn: 1.0.0
+        preferredLabel:
+          en: "Territory Alignment"
+        definition:
+          en: >
+            The assignment of a HCP or HCO to a sales territory for field-force
+            targeting. May be primary or shared, and re-aligned periodically.
+        relatedTerms: ["HealthcareProfessional", "HealthcareOrganization"]
+        usedIn: ["ODPS"]
+
+# ---- Cross-spec usage map ----------------------------------------------------
+crossSpecUsage:
+  ODPS:
+    - HealthcareProfessional
+    - HealthcareOrganization
+    - HCPAffiliation
+    - Engagement
+    - Prescription
+    - SampleDisbursement
+    - TransferOfValue
+    - Consent
+    - NextBestAction
+    - MedicalInquiry
+    - PatientPseudoID
+    - ClassOfTrade
+    - TerritoryAlignment
+  ODPC:
+    - HealthcareProfessional
+    - HealthcareOrganization
+    - KeyOpinionLeader
+    - AdverseEvent
+    - Pharmacovigilance
+  ODPG:
+    - HealthcareProfessional
+    - HealthcareOrganization
+    - Engagement
+    - SunshineAct
+    - EFPIADisclosure
+    - AdverseEvent
+    - Pharmacovigilance

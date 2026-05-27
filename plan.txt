@@ -1,0 +1,233 @@
+================================================================================
+ PLAN: CUSTOMER 360 DATA PRODUCT FOR A PHARMACEUTICAL COMPANY
+ Integration: Data Product Portal + Open Data Product Specifications (ODPS/C/V/G)
+ Version: 1.0   |   Status: Draft   |   Owner: Commercial Data & Analytics
+================================================================================
+
+
+1. EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+This plan describes the design, build and operationalization of a "Customer 360"
+data product for a global pharmaceutical company ("PharmaCo"). In pharma the
+"customer" is not a single role: it spans Healthcare Professionals (HCPs),
+Healthcare Organizations (HCOs), Patients (pseudonymized), and Payers. Customer
+360 unifies engagement, prescribing, medical inquiry, sample distribution,
+consent, and compliance data into a single governed, reusable data product.
+
+The product is built on the Data Product Portal (Dataminded / Conveyor) as the
+runtime/operational tool, and described using the Linux Foundation Open Data
+Product specifications: ODPS (product), ODPC (catalog), ODPG (graph), and ODPV
+(vocabulary). The Portal manages platform resources via Terraform; the ODP*
+files travel with the product through Git, marketplaces and AI-assisted
+discovery.
+
+KEY OUTCOMES
+  - +15% commercial productivity via next-best-action (NBA) for field reps
+  - 100% Sunshine Act / EFPIA-compliant HCP transfer-of-value reporting
+  - Sub-24h reach for adverse-event signal correlation
+  - 360-degree HCP profile available to Sales, Medical, Marketing, Compliance
+
+
+2. BUSINESS CONTEXT AND DRIVERS
+--------------------------------------------------------------------------------
+2.1 Why Customer 360 in pharma is different
+  - The "customer" graph is multi-entity: HCP <-> HCO affiliations are many-to-
+    many and change frequently.
+  - Prescription data (Rx) is purchased from third parties (IQVIA, Symphony,
+    Komodo) and must be reconciled with internal CRM/engagement data.
+  - Patient data is highly regulated (HIPAA in the US, GDPR in the EU). It must
+    be pseudonymized at ingestion, and the linkage key must be siloed.
+  - Regulatory transparency: every transfer of value to an HCP (meals, samples,
+    speaker fees) must be reported (US Sunshine Act, EFPIA Disclosure Code).
+  - Pharmacovigilance: signals related to product safety must be detectable and
+    auditable.
+
+2.2 Business drivers
+  - Commercial: target the right HCPs with the right message at the right time.
+  - Medical: support MSL field activity with a complete view of KOL engagement.
+  - Compliance: maintain a single source of truth for ToV reporting and consent.
+  - Legal/Privacy: provable lineage and access control for every patient record.
+
+
+3. SCOPE
+--------------------------------------------------------------------------------
+3.1 In scope (v1.0)
+  - HCP master (US and EU5: France, Germany, Italy, Spain, UK)
+  - HCO master and HCP-HCO affiliations
+  - Engagement events: rep calls, emails, web, events, samples, ToV
+  - Prescription / dispensed claims (Rx) from licensed third-party feed
+  - Medical Information inquiries and adverse-event linkage (read-only)
+  - Consent records and channel preferences
+  - Identity resolution: master person ID + golden record
+
+3.2 Out of scope (v1.0, deferred to v1.1+)
+  - Direct-to-patient identifiable data
+  - Real-world evidence (RWE) cohorts
+  - Clinical trial subject data
+  - Asia-Pacific markets
+
+
+4. ARCHITECTURE OVERVIEW
+--------------------------------------------------------------------------------
+4.1 Runtime stack
+  - Cloud: AWS (initial); Databricks (analytics); Snowflake (consumption)
+  - Storage: S3 raw / bronze / silver / gold; Iceberg tables
+  - Compute: Glue + Databricks notebooks; Athena for ad-hoc
+  - Orchestration: Airflow
+  - Identity: AWS IAM, Databricks Unity Catalog, Snowflake roles
+
+4.2 Governance stack
+  - Data Product Portal: data product registry, ownership, access requests
+  - ODPS: machine-readable product description (this artifact, per product)
+  - ODPC: portfolio catalog (Customer 360 lives alongside other products)
+  - ODPG: graph of relationships across products, use cases, KPIs, policies
+  - ODPV: pharma-specific vocabulary extension (terms like HCP, HCO, ToV)
+  - Collibra: business glossary + lineage; ODPS exported to Collibra nightly
+  - OneTrust: consent system of record; consent IDs join into the product
+
+4.3 Integration pattern (Portal <-> ODPS)
+  The Portal is the source of truth for operational resources (IAM, S3
+  prefixes, Glue databases, Unity grants). A CI/CD exporter reads the Portal
+  API on every change and emits one odps.yaml per data product to a Git
+  repository. The Git repo also stores ODPC catalog files, the ODPG graph, and
+  ODPV vocabulary extensions. ODPS files feed Collibra, the internal data
+  marketplace, and AI-assistant retrieval (GraphRAG over ODPG).
+
+    Portal (runtime)  -->  Exporter (CI/CD)  -->  Git (odps.yaml, odpc.yaml,
+                                                  odpg.yaml, odpv-pharma.yaml)
+                                                       |
+                                                       v
+                                            Collibra | Marketplace | AI Agents
+
+
+5. DATA PRODUCT DEFINITION
+--------------------------------------------------------------------------------
+Name:           Customer 360 - HCP & HCO
+Product ID:     DP-C360-HCP-001
+Version:        1.0.0
+Domain:         Commercial / Medical
+Type:           Derived (consumer-aligned)
+Visibility:     Internal (restricted access by use case)
+Owner:          Commercial Data & Analytics
+Steward:        Director, Commercial Analytics
+Status:         Active
+
+Value proposition:
+  "A single, governed, consent-aware view of every HCP and HCO PharmaCo
+   interacts with, enriched with engagement, prescribing and compliance
+   data, exposed as APIs and tables for Sales, Medical, Marketing and
+   Compliance use cases."
+
+
+6. COMMON DATA MODEL (CDM) - 14 TABLES
+--------------------------------------------------------------------------------
+The CDM is organized in three layers and groups. See cdm/tables.md for full
+column specs. Tables:
+
+  HUB (master/reference)
+    1.  dim_hcp                     Healthcare professional master
+    2.  dim_hco                     Healthcare organization master
+    3.  dim_hcp_hco_affiliation     HCP-HCO membership over time (SCD-2)
+    4.  dim_product                 Pharma product master (drug/SKU)
+    5.  dim_geography               Country / region / territory hierarchy
+    6.  dim_consent                 Consent records, channel-level, OneTrust ID
+
+  ENGAGEMENT (interactions)
+    7.  fact_engagement             Calls, emails, web, events (unified)
+    8.  fact_sample_disbursement    Drug samples given (Sunshine Act source)
+    9.  fact_transfer_of_value      Meals, fees, travel - ToV reporting
+   10.  fact_medical_inquiry        Med-info questions and responses
+
+  COMMERCIAL (outcomes)
+   11.  fact_prescription           Rx claims (third-party, restricted)
+   12.  fact_segmentation           Decile/segment per HCP per product
+   13.  fact_nba_recommendation     Next-Best-Action scores per HCP
+   14.  fact_adverse_event_link     Link between engagement and PV cases
+
+
+7. ACCESS, SECURITY AND GOVERNANCE
+--------------------------------------------------------------------------------
+7.1 Access scopes (enforced by the Portal via IAM and Unity grants)
+  - "C360_READ_COMMERCIAL": Sales ops, brand teams. Excludes adverse-event
+    linkage and medical inquiry free text.
+  - "C360_READ_MEDICAL":    Medical Affairs, MSL ops. Adds inquiry text.
+  - "C360_READ_COMPLIANCE": Compliance, internal audit. Adds full ToV ledger.
+  - "C360_READ_PV":         Pharmacovigilance ops only. Adds AE linkage.
+  - All access requires a documented use case in ODPC + steward approval.
+
+7.2 Identity resolution
+  - Primary HCP key: IQVIA OneKey ID (where available) fallback to NPI (US),
+    RPPS (France), GMC (UK), then internal ID.
+  - Patient: SHA-256 of (last name + DoB + zip) salted per data center.
+
+7.3 Consent
+  - Every engagement-channel record carries the OneTrust consent ID at the
+    time of interaction. Engagement is filterable by consent state.
+
+7.4 Regulatory and privacy controls
+  - GDPR: EU records pinned to eu-west-1; right-to-be-forgotten propagates
+    via Portal-orchestrated job.
+  - HIPAA: Patient layer uses a separate Glue database and IAM boundary.
+  - Sunshine Act / EFPIA: fact_transfer_of_value frozen monthly and signed.
+
+7.5 Data quality (declarative, executable in Soda)
+  - dim_hcp.npi: uniqueness 100%, format /^\d{10}$/, freshness <=24h
+  - dim_consent.opt_in_status: completeness 100%
+  - fact_prescription: latency from source <= 7 days, p95
+
+
+8. SLAs
+--------------------------------------------------------------------------------
+  - Availability:   99.5% monthly (excluding planned maintenance)
+  - Freshness:      Engagement <= 1h, Rx <= 7d, ToV <= 24h
+  - Support:        Tier-2 response <= 4 business hours
+  - Schema change:  90 days deprecation notice for breaking changes
+
+
+9. ROADMAP
+--------------------------------------------------------------------------------
+  M1  (Weeks 1-2)   ODP* artifacts + Portal registration; pilot domain config
+  M2  (Weeks 3-6)   CDM build for HCP/HCO masters and engagement
+  M3  (Weeks 7-10)  Rx ingestion + segmentation + consent join
+  M4  (Weeks 11-12) ToV pipeline + Sunshine Act/EFPIA reports
+  M5  (Weeks 13-16) NBA model integration + API exposure
+  M6  (Week  17)    Promote to "Active"; close v1.0
+  GA                Marketplace listing via ODPC; AI assistant via ODPG
+
+
+10. KPIs (FROM ODPS productKPIs)
+--------------------------------------------------------------------------------
+  KPI-001  HCP coverage              target: 98%   direction: at_least
+  KPI-002  Consent currency          target: 95%   direction: at_least
+  KPI-003  Rep adoption (DAU/MAU)    target: 70%   direction: at_least
+  KPI-004  NBA precision @ top-10    target: 35%   direction: at_least
+  KPI-005  ToV reporting on-time     target: 100%  direction: equals
+
+
+11. RISKS AND MITIGATIONS
+--------------------------------------------------------------------------------
+  R1  Third-party Rx licensing renegotiation       -> Contract owner: Procurement
+  R2  Sunshine Act audit gap                       -> Monthly attestation
+  R3  EU/US data residency drift                   -> Portal env separation
+  R4  Identity-resolution false positives          -> Steward review queue
+  R5  Consent change after engagement              -> Daily reconciliation job
+
+
+12. DELIVERABLES IN THIS PACKAGE
+--------------------------------------------------------------------------------
+  plan.txt                       This document
+  portal_config/
+    data_product_glossary.yaml   Portal data product registration
+    datasets.yaml                Portal dataset definitions
+    data_outputs.yaml            Portal data output definitions
+  cdm/
+    tables.md                    Common data model: 14 tables with columns
+  catalog/
+    odps-c360-hcp.yaml           ODPS 4.1 product specification
+    odpc-pharma-commercial.yaml  ODPC catalog (portfolio context)
+    odpg-pharma-c360.yaml        ODPG graph (relationships)
+    odpv-pharma-extension.yaml   ODPV pharma-specific vocabulary terms
+
+================================================================================
+ END OF PLAN
+================================================================================

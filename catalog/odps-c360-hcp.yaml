@@ -1,0 +1,308 @@
+# =============================================================================
+# Open Data Product Specification (ODPS) 4.1 - product description
+# Product: Customer 360 - HCP & HCO  (Pharmaceutical)
+# =============================================================================
+schema: https://opendataproducts.org/v4.1/schema/odps.yaml
+version: 4.1
+
+product:
+
+  contract:
+    id: contract-c360-hcp-1.0
+    type: dataContract
+    contractVersion: "1.0.0"
+    contractURL: https://contracts.pharmaco.example.com/c360/hcp/1.0.0
+
+  details:
+    en:
+      name: "Customer 360 - HCP & HCO"
+      productID: DP-C360-HCP-001
+      governanceProfile: enforced
+      portfolioPriority: critical
+      valueProposition: >
+        A single, governed, consent-aware view of every Healthcare Professional
+        and Healthcare Organization PharmaCo interacts with. Joins CRM
+        engagement, third-party prescription claims, transfer-of-value records,
+        consent, segmentation and Next-Best-Action signals into one product
+        consumed by Sales, Medical, Marketing and Compliance.
+      description: >
+        Customer 360 unifies multi-source HCP and HCO data into a governed gold
+        layer. It supports field rep targeting, medical KOL engagement,
+        omnichannel marketing, Sunshine Act / EFPIA disclosure, and pharma-
+        covigilance signal correlation. Exposed as curated tables, an event
+        stream, and a profile API. All consumer access is mediated by access
+        scopes provisioned through the Data Product Portal.
+      visibility: internal
+      status: active
+      productVersion: "1.0.0"
+
+  productStrategy:
+    status: Active
+    startDate: "2026-01-15"
+    endDate: "2027-01-15"
+
+    objectives:
+      - en: "Deliver a unified HCP/HCO view across commercial and medical."
+      - en: "Provide consent-aware engagement signals to NBA model."
+      - en: "Guarantee Sunshine Act / EFPIA compliance with auditable ToV ledger."
+      - en: "Reduce reporting time-to-close from quarterly to monthly."
+
+    strategicAlignment:
+      - en: "Pillar 1: Become a customer-centric commercial organization."
+      - en: "Pillar 3: Operate with regulatory excellence."
+
+    contributesToKPI:
+      id: ENT-KPI-COMM-001
+      name: "Commercial Field Productivity Index"
+      description: "Enterprise-level index measuring field force ROI."
+      unit: "index_score"
+      target: 115
+      direction: at_least
+      timeframe: "FY2026"
+
+    productKPIs:
+      - id: KPI-001
+        name: "HCP coverage"
+        description: "% of in-scope HCPs present and current in dim_hcp"
+        unit: "percent"
+        target: 98
+        direction: at_least
+        frequency: monthly
+        owner: "Director, Commercial Analytics"
+        calculation: "count(distinct hcp_id where is_current) / count(distinct target_universe)"
+
+      - id: KPI-002
+        name: "Consent currency"
+        description: "% of fact_engagement rows with non-stale consent"
+        unit: "percent"
+        target: 95
+        direction: at_least
+        frequency: daily
+        owner: "Privacy Office"
+        calculation: "rows with consent_valid=true / total rows"
+
+      - id: KPI-003
+        name: "Rep adoption DAU/MAU"
+        description: "Daily active reps using the C360 surface, over monthly"
+        unit: "ratio_percent"
+        target: 70
+        direction: at_least
+        frequency: weekly
+        owner: "Sales Operations"
+        calculation: "DAU / MAU * 100"
+
+      - id: KPI-004
+        name: "NBA precision @ top 10"
+        description: "Precision of top-10 recommended actions per HCP"
+        unit: "percent"
+        target: 35
+        direction: at_least
+        frequency: monthly
+        owner: "Data Science"
+        calculation: "actioned_top10_with_positive_outcome / actioned_top10"
+
+      - id: KPI-005
+        name: "ToV report timeliness"
+        description: "% of ToV reports submitted to regulators on or before deadline"
+        unit: "percent"
+        target: 100
+        direction: equals
+        frequency: quarterly
+        owner: "Compliance"
+        calculation: "on_time_filings / total_filings * 100"
+
+    relatedKPIs:
+      - id: REL-KPI-001
+        name: "Adverse event linkage time"
+        unit: "hours"
+        target: 24
+        direction: at_most
+
+  pricingPlans:
+    declarative:
+      en:
+        - name: "Internal - Commercial"
+          description: "Free to PharmaCo Commercial users; charged back at month-end via chargeback model 'CMM-C360-COMM'."
+        - name: "Internal - Medical"
+          description: "Free to Medical Affairs; restricted to non-Rx fields."
+        - name: "Internal - Compliance"
+          description: "Free to Compliance; full ToV ledger only."
+
+  SLA:
+    declarative:
+      operational:
+        name:
+          en: "Operational SLA"
+        dimensions:
+          - dimension: availability
+            objective: 995
+            unit: "permille"
+            weight: 5
+          - dimension: freshness_engagement
+            objective: 60
+            unit: "minutes"
+            weight: 4
+          - dimension: freshness_rx
+            objective: 7
+            unit: "days"
+            weight: 3
+          - dimension: api_p95_latency
+            objective: 250
+            unit: "milliseconds"
+            weight: 3
+      regulatory:
+        name:
+          en: "Regulatory SLA"
+        dimensions:
+          - dimension: tov_report_on_time
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: gdpr_rtbf_completion
+            objective: 30
+            unit: "days"
+            weight: 5
+
+  dataQuality:
+    declarative:
+      identity:
+        displaytitle:
+          en: "Identity resolution quality"
+        dimensions:
+          - dimension: uniqueness_npi
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: completeness_onekey
+            objective: 90
+            unit: "percent"
+            weight: 4
+          - dimension: match_confidence_avg
+            objective: 95
+            unit: "percent"
+            weight: 4
+      consent:
+        displaytitle:
+          en: "Consent completeness"
+        dimensions:
+          - dimension: completeness_consent_join
+            objective: 100
+            unit: "percent"
+            weight: 5
+      financial:
+        displaytitle:
+          en: "ToV ledger integrity"
+        dimensions:
+          - dimension: row_signature_validity
+            objective: 100
+            unit: "percent"
+            weight: 5
+
+    executable:
+      - dimension: uniqueness_npi
+        type: SodaCL
+        version: "3.3"
+        reference: https://soda.pharmaco.example.com/c360/dim_hcp_npi.yaml
+        spec:
+          checks for dim_hcp:
+            - duplicate_count(npi) = 0:
+                filter: country_iso = 'US'
+            - missing_percent(consent_status) < 1
+      - dimension: row_signature_validity
+        type: Custom
+        version: "1.0"
+        reference: https://soda.pharmaco.example.com/c360/tov_signatures.py
+        spec:
+          description: "Verifies KMS signature on every fact_transfer_of_value row."
+
+  dataAccess:
+    curated_tables:
+      outputPorttype: tables
+      description: "Curated gold tables - Glue/Unity/Snowflake"
+      endpoints:
+        - type: glue_database
+          ref: "c360_hcp_gold_{env}"
+        - type: unity_catalog_schema
+          ref: "pharmaco_gold.c360_hcp"
+        - type: snowflake_share
+          ref: "PHARMACO_C360_GOLD.HCP"
+    engagement_stream:
+      outputPorttype: stream
+      description: "Real-time engagement event stream"
+      endpoints:
+        - type: kafka
+          ref: "pharmaco.c360.engagement.v1"
+        - type: kinesis
+          ref: "pharmaco-c360-engagement-{env}"
+    hcp_profile_api:
+      outputPorttype: api
+      description: "Read-only HCP 360 profile REST API"
+      endpoints:
+        - type: rest
+          ref: "https://api.pharmaco.example.com/c360/v1/hcp/{id}"
+      auth:
+        type: oauth2
+        scopes: ["c360.read"]
+    tov_ledger:
+      outputPorttype: tables
+      description: "Append-only ToV ledger (compliance only)"
+      endpoints:
+        - type: glue_database
+          ref: "c360_tov_{env}"
+        - type: s3_signed_archive
+          ref: "s3://pharmaco-regulated-{env}/tov/"
+
+  paymentGateways:
+    chargeback:
+      type: internal_chargeback
+      version: "2026.1"
+      ref: "CMM-C360-COMM"
+
+  support:
+    phoneNumber: "+1-800-555-0142"
+    email: c360-support@pharmaco.example.com
+    documentationURL: https://docs.pharmaco.example.com/products/c360
+    statusPage: https://status.pharmaco.example.com/c360
+    slackChannel: "#data-product-c360"
+
+  license:
+    en:
+      scope: >
+        Internal use only by PharmaCo employees and approved contractors with a
+        signed Data Use Agreement. Includes IQVIA-licensed Rx fields subject to
+        IQ-2025-MASTER terms and OneKey fields subject to IQ-2025-ONEKEY.
+      termination: >
+        Access is revoked automatically upon employee offboarding or DUA
+        expiration. Vendor data access terminates at IQVIA contract end.
+      governance: >
+        All consumer access requires (a) an approved use case in ODPC,
+        (b) Data Steward approval, (c) attestation of DUA. Sunshine Act / EFPIA
+        outputs additionally require Compliance Officer sign-off per release.
+
+  dataHolder:
+    en:
+      legalName: "PharmaCo Global Holdings Ltd."
+      email: data-office@pharmaco.example.com
+      URL: https://pharmaco.example.com
+      streetAddress: "1 Discovery Way"
+      postalCode: "02139"
+      addressLocality: "Cambridge, MA"
+      addressCountry: "US"
+
+# ---- Vendor-neutral extensions (x-) used by Portal and pharma tooling --------
+x-portal:
+  data_product_id: dp-c360-hcp
+  url: https://portal.pharmaco.example.com/products/dp-c360-hcp
+x-pharma:
+  regulated: true
+  regulations:
+    - sunshine_act
+    - efpia_disclosure_code
+    - gdpr
+    - hipaa
+  pseudonymization:
+    patient: "SHA-256 salted, salt rotated quarterly via KMS"
+  consent_source_of_truth: onetrust
+  pharmacovigilance:
+    handoff_system: "Argus Safety"
+    sla_to_pv_hours: 24
