@@ -1,0 +1,140 @@
+# =============================================================================
+# Open Data Product Specification (ODPS) 4.1 - product description
+# Product: Prescription Claims Feed (Licensed)
+# =============================================================================
+schema: https://opendataproducts.org/v4.1/schema/odps.yaml
+version: 4.1
+
+product:
+
+  contract:
+    id: contract-rx-feed-1.4
+    type: dataContract
+    contractVersion: "1.4.0"
+    contractURL: https://contracts.pharmaco.example.com/rx-feed/1.4.0
+
+  details:
+    en:
+      name: "Prescription claims feed (licensed)"
+      productID: DP-RX-FEED-001
+      governanceProfile: structured
+      portfolioPriority: high
+      valueProposition: >
+        Third-party prescription claims data providing HCP-level prescribing
+        insights. Enables commercial analytics, segmentation, and field-force
+        targeting for PharmaCo's portfolio.
+      description: >
+        Licensed prescription claims feed from IQVIA Xponent, with weekly
+        refresh. HCP-level, covering US and EU5 markets. Subject to strict
+        IQVIA license terms (contract IQ-2025-MASTER). Patient identifiers are
+        pseudonymized at source. Consumed by Customer 360 for segmentation and
+        fact_prescription tables.
+      visibility: restricted
+      status: active
+      productVersion: "1.4.0"
+
+  productStrategy:
+    status: Active
+    startDate: "2025-03-01"
+    endDate: "2027-03-01"
+
+    objectives:
+      - en: "Deliver weekly Rx claims with <=7 day latency from source."
+      - en: "Maintain IQVIA license compliance across all consumers."
+      - en: "Support HCP segmentation and prescribing analytics."
+
+    strategicAlignment:
+      - en: "Pillar 1: Become a customer-centric commercial organization."
+
+    productKPIs:
+      - id: KPI-RX-001
+        name: "Rx load freshness"
+        description: "Days from IQVIA delivery to availability in bronze"
+        unit: "days"
+        target: 7
+        direction: at_most
+        frequency: weekly
+        owner: "External Data Ops"
+
+      - id: KPI-RX-002
+        name: "Rx record completeness"
+        description: "% of Rx records with valid HCP linkage"
+        unit: "percent"
+        target: 95
+        direction: at_least
+        frequency: weekly
+        owner: "External Data Ops"
+
+  SLA:
+    declarative:
+      operational:
+        name:
+          en: "Operational SLA"
+        dimensions:
+          - dimension: availability
+            objective: 995
+            unit: "permille"
+            weight: 4
+          - dimension: freshness
+            objective: 7
+            unit: "days"
+            weight: 5
+
+  dataQuality:
+    declarative:
+      rx_integrity:
+        displaytitle:
+          en: "Rx data integrity"
+        dimensions:
+          - dimension: hcp_linkage_rate
+            objective: 95
+            unit: "percent"
+            weight: 5
+          - dimension: latency_from_source
+            objective: 7
+            unit: "days"
+            weight: 5
+
+  dataAccess:
+    rx_claims:
+      outputPorttype: tables
+      description: "Prescription claims in Iceberg format"
+      endpoints:
+        - type: s3_iceberg
+          ref: "s3://pharmaco-bronze-{env}/external/iqvia/xponent/"
+        - type: glue_database
+          ref: "rx_iqvia_{env}"
+
+  support:
+    email: external-data-ops@pharmaco.example.com
+    documentationURL: https://docs.pharmaco.example.com/products/rx-feed
+    slackChannel: "#data-product-rx-feed"
+
+  license:
+    en:
+      scope: >
+        Internal use only. Licensed from IQVIA under contract IQ-2025-MASTER.
+        Allowed uses: internal_analytics, field_targeting. Forbidden uses:
+        resale, public_disclosure.
+      termination: >
+        Access terminates at IQVIA contract end. All derived datasets must
+        purge IQVIA-sourced Rx fields within 90 days of contract expiration.
+      governance: >
+        All consumers must have an approved use case, signed DUA, and
+        acknowledgement of IQVIA license restrictions.
+
+  dataHolder:
+    en:
+      legalName: "PharmaCo Global Holdings Ltd."
+      email: data-office@pharmaco.example.com
+      URL: https://pharmaco.example.com
+      addressCountry: "US"
+
+x-portal:
+  data_product_id: dp-rx-feed
+  url: https://portal.pharmaco.example.com/products/dp-rx-feed
+x-licensing:
+  vendor: IQVIA
+  contract_id: IQ-2025-MASTER
+  allowed_use: ["internal_analytics", "field_targeting"]
+  forbidden_use: ["resale", "public_disclosure"]

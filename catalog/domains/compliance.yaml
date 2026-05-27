@@ -1,0 +1,47 @@
+# =============================================================================
+# ODPG Domain Node: Compliance
+# =============================================================================
+kind: Domain
+version: "1.0"
+
+domain:
+  id: dom-compliance
+  name:
+    en: "Compliance"
+  description:
+    en: >
+      PharmaCo's compliance domain responsible for regulatory transparency,
+      transfer-of-value reporting, audit readiness, and ensuring adherence
+      to Sunshine Act, EFPIA Disclosure Code, and third-party licensing terms.
+  scope:
+    en: >
+      Transfer-of-value ledger management, Sunshine Act / EFPIA disclosure
+      filings, audit trail maintenance, IQVIA license compliance, and
+      regulatory reporting workflows.
+
+  owner:
+    team: "Compliance"
+    role: "Chief Compliance Officer"
+    email: compliance@pharmaco.example.com
+
+  dataProducts:
+    - dp-c360-hcp
+
+  policies:
+    - pol-sunshine-act
+    - pol-efpia
+    - pol-iqvia-license
+
+  useCases:
+    - uc-sunshine-act
+
+  businessObjectives:
+    - bo-regulatory-excellence
+
+  stakeholders:
+    - "Compliance Officer"
+    - "Legal"
+    - "Internal Audit"
+
+  status: active
+  tags: ["compliance", "sunshine-act", "efpia", "tov", "audit"]

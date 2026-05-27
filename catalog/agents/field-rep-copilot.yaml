@@ -1,0 +1,65 @@
+# =============================================================================
+# ODPG Agent Node: Field Rep Copilot
+# =============================================================================
+kind: Agent
+version: "1.0"
+
+agent:
+  id: agent-field-rep-copilot
+  name:
+    en: "Field Rep Copilot"
+  description:
+    en: >
+      AI-powered copilot embedded in the field rep mobile app that surfaces
+      HCP 360 profiles and Next-Best-Action recommendations to help sales
+      representatives plan and optimize their weekly call schedules.
+  type: ai_copilot
+  purpose:
+    en: >
+      Provide real-time, consent-aware HCP intelligence and prioritized
+      action recommendations to field reps during call planning and
+      pre-call preparation.
+
+  owner:
+    team: "Commercial Data & Analytics"
+    email: c360-stewards@pharmaco.example.com
+
+  consumes:
+    - id: api-c360-hcp
+      type: API
+      ref: "https://api.pharmaco.example.com/c360/v1/hcp/{id}"
+      accessScope: c360_read_commercial
+    - id: dp-nba
+      type: DataProduct
+      ref: "catalog/odps-nba.yaml"
+      accessScope: c360_read_commercial
+
+  supportsUseCases:
+    - uc-rep-targeting
+
+  users:
+    - role: "Sales Representative"
+      team: "Field Sales"
+    - role: "Key Account Manager"
+      team: "Key Accounts"
+
+  capabilities:
+    - "HCP profile lookup with engagement history and segmentation"
+    - "NBA recommendation surfacing with explanation codes"
+    - "Weekly call plan generation based on territory and priority"
+    - "Consent-aware channel suggestions (email, call, visit)"
+    - "Real-time Rx trend summary per HCP"
+
+  constraints:
+    - "No access to medical inquiry free text (c360_read_medical only)"
+    - "No access to adverse event linkage data (c360_read_pv only)"
+    - "No access to patient-level data (pseudonymized IDs only)"
+    - "No access to ToV ledger details (c360_read_compliance only)"
+    - "Must respect IQVIA license terms on Rx data (no public disclosure)"
+
+  auth:
+    type: oauth2
+    scopes: ["c360.read"]
+
+  status: active
+  tags: ["ai", "copilot", "sales", "field-rep", "nba"]

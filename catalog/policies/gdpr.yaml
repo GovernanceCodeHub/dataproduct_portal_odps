@@ -1,0 +1,96 @@
+# =============================================================================
+# ODPG Policy Node: GDPR
+# =============================================================================
+kind: Policy
+version: "1.0"
+
+policy:
+  id: pol-gdpr
+  name:
+    en: "General Data Protection Regulation (GDPR)"
+  description:
+    en: >
+      EU regulation governing the processing of personal data of individuals
+      within the European Economic Area. Applies to all PharmaCo data products
+      that process HCP or patient data originating from EU5 markets.
+  type: regulation
+  jurisdiction: "EU/EEA"
+  authority: "European Data Protection Board (EDPB)"
+  citation: "Regulation (EU) 2016/679"
+  url: https://eur-lex.europa.eu/eli/reg/2016/679/oj
+
+  applicableProducts:
+    - dp-c360-hcp
+    - dp-consent
+    - dp-onekey
+    - dp-medinfo
+
+  requirements:
+    - id: req-gdpr-001
+      name:
+        en: "Data residency"
+      description:
+        en: "EU personal data must be stored and processed within eu-west-1."
+      enforcement: automated
+
+    - id: req-gdpr-002
+      name:
+        en: "Right to be forgotten (RTBF)"
+      description:
+        en: >
+          Data subject erasure requests must be propagated across all derived
+          datasets within 30 days of receipt.
+      enforcement: automated
+
+    - id: req-gdpr-003
+      name:
+        en: "Consent-based processing"
+      description:
+        en: >
+          Processing of HCP personal data for marketing purposes requires
+          valid consent per channel and purpose. Consent must be checked at
+          the time of each outbound interaction.
+      enforcement: automated
+
+    - id: req-gdpr-004
+      name:
+        en: "Data Protection Officer oversight"
+      description:
+        en: "DPO must review and approve new processing activities annually."
+      enforcement: attestation
+
+  controls:
+    - id: ctrl-gdpr-001
+      name:
+        en: "EU data residency enforcement"
+      description:
+        en: >
+          Portal environment configuration pins EU data products to eu-west-1.
+          S3 bucket policies deny cross-region replication.
+      frequency: continuous
+
+    - id: ctrl-gdpr-002
+      name:
+        en: "RTBF propagation job"
+      description:
+        en: >
+          Portal-orchestrated Airflow DAG propagates erasure requests from
+          OneTrust to all downstream tables within the 30-day SLA.
+      frequency: daily
+
+    - id: ctrl-gdpr-003
+      name:
+        en: "Consent join filter"
+      description:
+        en: >
+          Every fact table query for outbound use cases joins on dim_consent
+          and filters by opt_in_status='granted'.
+      frequency: continuous
+
+  status: active
+  effectiveDate: "2018-05-25"
+  reviewDate: "2027-01-01"
+  owner:
+    team: "Privacy Office"
+    email: privacy-office@pharmaco.example.com
+  tags: ["gdpr", "privacy", "eu", "regulation"]

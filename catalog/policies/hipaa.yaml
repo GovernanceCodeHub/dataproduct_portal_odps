@@ -1,0 +1,99 @@
+# =============================================================================
+# ODPG Policy Node: HIPAA
+# =============================================================================
+kind: Policy
+version: "1.0"
+
+policy:
+  id: pol-hipaa
+  name:
+    en: "Health Insurance Portability and Accountability Act (HIPAA)"
+  description:
+    en: >
+      US federal law governing the protection of individually identifiable
+      health information (PHI). Applies to all PharmaCo data products that
+      process patient-level data in the United States.
+  type: regulation
+  jurisdiction: "US"
+  authority: "US Department of Health and Human Services (HHS)"
+  citation: "45 CFR Parts 160, 162, 164"
+  url: https://www.hhs.gov/hipaa/index.html
+
+  applicableProducts:
+    - dp-c360-hcp
+    - dp-consent
+
+  requirements:
+    - id: req-hipaa-001
+      name:
+        en: "Patient data pseudonymization"
+      description:
+        en: >
+          All patient identifiers must be pseudonymized using SHA-256 with a
+          quarterly-rotated salt. The crosswalk from pseudonymous to identified
+          patient records must be stored in a separate IAM boundary.
+      enforcement: automated
+
+    - id: req-hipaa-002
+      name:
+        en: "IAM boundary separation"
+      description:
+        en: >
+          Patient-level data must reside in a separate Glue database with its
+          own IAM boundary. The Customer 360 product must never expose the
+          patient crosswalk.
+      enforcement: automated
+
+    - id: req-hipaa-003
+      name:
+        en: "Business Associate Agreement"
+      description:
+        en: >
+          All third-party processors with access to PHI must have a signed BAA
+          on file before data access is provisioned.
+      enforcement: attestation
+
+    - id: req-hipaa-004
+      name:
+        en: "PHI access audit logging"
+      description:
+        en: >
+          All access to patient-level tables must be logged with user identity,
+          timestamp, and query details. Logs retained for 6 years.
+      enforcement: automated
+
+  controls:
+    - id: ctrl-hipaa-001
+      name:
+        en: "SHA-256 pseudonymization at ingestion"
+      description:
+        en: >
+          Ingestion pipeline applies salted SHA-256 hash to patient identifiers
+          before writing to bronze layer. Salt stored in KMS, rotated quarterly.
+      frequency: continuous
+
+    - id: ctrl-hipaa-002
+      name:
+        en: "Separate Glue database for patient crosswalk"
+      description:
+        en: >
+          Patient crosswalk stored in dedicated Glue database with IAM policies
+          restricting access to authorized data stewards only.
+      frequency: continuous
+
+    - id: ctrl-hipaa-003
+      name:
+        en: "CloudTrail + Athena audit logging"
+      description:
+        en: >
+          All Glue/Athena/Databricks queries against patient tables logged via
+          CloudTrail. Audit reports generated monthly.
+      frequency: continuous
+
+  status: active
+  effectiveDate: "1996-08-21"
+  reviewDate: "2027-01-01"
+  owner:
+    team: "Privacy Office"
+    email: privacy-office@pharmaco.example.com
+  tags: ["hipaa", "privacy", "us", "phi", "regulation"]

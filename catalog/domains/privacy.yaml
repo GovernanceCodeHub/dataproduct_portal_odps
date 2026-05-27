@@ -1,0 +1,46 @@
+# =============================================================================
+# ODPG Domain Node: Privacy
+# =============================================================================
+kind: Domain
+version: "1.0"
+
+domain:
+  id: dom-privacy
+  name:
+    en: "Privacy"
+  description:
+    en: >
+      PharmaCo's privacy domain responsible for consent management, data
+      subject rights, data protection impact assessments, and ensuring all
+      data products comply with GDPR, HIPAA, and other privacy regulations.
+  scope:
+    en: >
+      Consent collection and lifecycle management, right-to-be-forgotten
+      propagation, data residency enforcement, pseudonymization standards,
+      and Data Protection Officer oversight.
+
+  owner:
+    team: "Privacy Office"
+    role: "Data Protection Officer"
+    email: privacy-office@pharmaco.example.com
+
+  dataProducts:
+    - dp-consent
+    - dp-c360-hcp
+
+  policies:
+    - pol-gdpr
+    - pol-hipaa
+
+  useCases: []
+
+  businessObjectives:
+    - bo-regulatory-excellence
+
+  stakeholders:
+    - "Data Protection Officer"
+    - "Privacy Office"
+    - "Legal"
+
+  status: active
+  tags: ["privacy", "consent", "gdpr", "hipaa", "data-protection"]

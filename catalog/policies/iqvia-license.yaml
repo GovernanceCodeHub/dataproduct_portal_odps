@@ -1,0 +1,117 @@
+# =============================================================================
+# ODPG Policy Node: IQVIA Data Licensing
+# =============================================================================
+kind: Policy
+version: "1.0"
+
+policy:
+  id: pol-iqvia-license
+  name:
+    en: "IQVIA Data Licensing Terms"
+  description:
+    en: >
+      Commercial licensing constraints governing PharmaCo's use of IQVIA-sourced
+      data, including Xponent prescription claims (IQ-2025-MASTER) and OneKey
+      HCP/HCO master data (IQ-2025-ONEKEY). All downstream products that
+      consume IQVIA-licensed fields inherit these restrictions.
+  type: license
+  jurisdiction: "Global"
+  authority: "IQVIA (contractual)"
+
+  contracts:
+    - id: IQ-2025-MASTER
+      name: "IQVIA Xponent Rx Claims License"
+      scope: "Prescription claims feed"
+      applicableProducts:
+        - dp-rx-feed
+        - dp-c360-hcp
+      allowed_use:
+        - internal_analytics
+        - field_targeting
+      forbidden_use:
+        - resale
+        - public_disclosure
+
+    - id: IQ-2025-ONEKEY
+      name: "IQVIA OneKey HCP/HCO Master License"
+      scope: "HCP and HCO master reference data"
+      applicableProducts:
+        - dp-onekey
+        - dp-c360-hcp
+      allowed_use:
+        - internal_analytics
+        - identity_resolution
+      forbidden_use:
+        - resale
+        - public_disclosure
+
+  applicableProducts:
+    - dp-rx-feed
+    - dp-onekey
+    - dp-c360-hcp
+    - dp-nba
+
+  requirements:
+    - id: req-iqvia-001
+      name:
+        en: "Allowed use restriction"
+      description:
+        en: >
+          IQVIA data may only be used for internal analytics and field
+          targeting. Resale and public disclosure are strictly prohibited.
+      enforcement: attestation
+
+    - id: req-iqvia-002
+      name:
+        en: "Data Use Agreement"
+      description:
+        en: >
+          All consumers of IQVIA-licensed data must sign a Data Use Agreement
+          acknowledging license restrictions before access is provisioned.
+      enforcement: manual
+
+    - id: req-iqvia-003
+      name:
+        en: "Contract expiration purge"
+      description:
+        en: >
+          Upon contract termination, all IQVIA-sourced fields must be purged
+          from derived datasets within 90 days.
+      enforcement: manual
+
+    - id: req-iqvia-004
+      name:
+        en: "Downstream inheritance"
+      description:
+        en: >
+          Products consuming IQVIA-licensed data (e.g., C360, NBA) inherit all
+          licensing restrictions. The license scope propagates through the data
+          lineage graph.
+      enforcement: attestation
+
+  controls:
+    - id: ctrl-iqvia-001
+      name:
+        en: "DUA tracking in Portal"
+      description:
+        en: >
+          Portal tracks DUA signatures per user. Access to IQVIA-scoped tables
+          requires active DUA status.
+      frequency: continuous
+
+    - id: ctrl-iqvia-002
+      name:
+        en: "Contract renewal monitoring"
+      description:
+        en: >
+          Procurement monitors contract expiration dates. Alerts fire 180 days
+          and 90 days before expiration.
+      frequency: quarterly
+
+  status: active
+  effectiveDate: "2025-01-01"
+  reviewDate: "2026-12-31"
+  owner:
+    team: "Procurement / External Data Ops"
+    email: external-data-ops@pharmaco.example.com
+  tags: ["iqvia", "license", "rx", "onekey", "third-party"]

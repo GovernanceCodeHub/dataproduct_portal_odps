@@ -1,0 +1,162 @@
+# =============================================================================
+# Open Data Product Specification (ODPS) 4.1 - product description
+# Product: Next-Best-Action Recommendations
+# =============================================================================
+schema: https://opendataproducts.org/v4.1/schema/odps.yaml
+version: 4.1
+
+product:
+
+  contract:
+    id: contract-nba-0.9
+    type: dataContract
+    contractVersion: "0.9.0"
+    contractURL: https://contracts.pharmaco.example.com/nba/0.9.0
+
+  details:
+    en:
+      name: "Next-Best-Action recommendations"
+      productID: DP-NBA-MODEL-001
+      governanceProfile: structured
+      portfolioPriority: high
+      valueProposition: >
+        Per-HCP per-product recommendation scores powering field rep call
+        planning and omnichannel orchestration. Consumes Customer 360 to
+        produce ranked, channel-aware, consent-filtered action recommendations.
+      description: >
+        ML-driven Next-Best-Action model that ingests engagement history,
+        prescribing patterns, segmentation, and consent state from the Customer
+        360 product. Outputs ranked recommendations per HCP per product with
+        priority scores, suggested channels, and explanation codes. Refreshed
+        daily. Consumed by the field rep copilot and sales operations dashboards.
+      visibility: internal
+      status: active
+      productVersion: "0.9.0"
+
+  productStrategy:
+    status: Active
+    startDate: "2026-03-01"
+    endDate: "2027-03-01"
+
+    objectives:
+      - en: "Achieve >=35% precision at top-10 recommended actions."
+      - en: "Deliver daily-fresh recommendations to field reps."
+      - en: "Ensure all recommendations respect consent state."
+
+    strategicAlignment:
+      - en: "Pillar 1: Become a customer-centric commercial organization."
+
+    productKPIs:
+      - id: KPI-NBA-001
+        name: "NBA precision @ top 10"
+        description: "Precision of top-10 recommended actions per HCP"
+        unit: "percent"
+        target: 35
+        direction: at_least
+        frequency: monthly
+        owner: "Data Science"
+        calculation: "actioned_top10_with_positive_outcome / actioned_top10"
+
+      - id: KPI-NBA-002
+        name: "Recommendation freshness"
+        description: "Hours from model run to availability in serving layer"
+        unit: "hours"
+        target: 6
+        direction: at_most
+        frequency: daily
+        owner: "Data Science"
+
+      - id: KPI-NBA-003
+        name: "Consent filter rate"
+        description: "% of recommendations that had consent filtering applied"
+        unit: "percent"
+        target: 100
+        direction: equals
+        frequency: daily
+        owner: "Data Science"
+
+  inputProducts:
+    - id: dp-c360-hcp
+      name: "Customer 360 - HCP & HCO"
+      tables_consumed:
+        - fact_engagement
+        - fact_prescription
+        - fact_segmentation
+        - dim_hcp
+        - dim_consent
+
+  SLA:
+    declarative:
+      operational:
+        name:
+          en: "Operational SLA"
+        dimensions:
+          - dimension: availability
+            objective: 995
+            unit: "permille"
+            weight: 4
+          - dimension: freshness
+            objective: 24
+            unit: "hours"
+            weight: 5
+
+  dataQuality:
+    declarative:
+      model_output:
+        displaytitle:
+          en: "Model output quality"
+        dimensions:
+          - dimension: recommendation_completeness
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: consent_filter_applied
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: score_range_validity
+            objective: 100
+            unit: "percent"
+            weight: 4
+
+  dataAccess:
+    nba_recommendations:
+      outputPorttype: tables
+      description: "NBA recommendation scores in gold layer"
+      endpoints:
+        - type: glue_database
+          ref: "nba_recommendations_{env}"
+        - type: unity_catalog_schema
+          ref: "pharmaco_gold.nba"
+
+  support:
+    email: data-science-commercial@pharmaco.example.com
+    documentationURL: https://docs.pharmaco.example.com/products/nba
+    slackChannel: "#data-product-nba"
+
+  license:
+    en:
+      scope: >
+        Internal use only. Model outputs inherit licensing constraints from
+        upstream IQVIA Rx data (IQ-2025-MASTER). Recommendations must not be
+        shared outside PharmaCo or used for purposes outside the IQVIA contract.
+      governance: >
+        All consumers must have an approved use case. Model version and
+        training data lineage are logged for auditability.
+
+  dataHolder:
+    en:
+      legalName: "PharmaCo Global Holdings Ltd."
+      email: data-office@pharmaco.example.com
+      URL: https://pharmaco.example.com
+      addressCountry: "US"
+
+x-portal:
+  data_product_id: dp-nba
+  url: https://portal.pharmaco.example.com/products/dp-nba
+x-pharma:
+  regulated: false
+  model_metadata:
+    framework: "internal_ml_platform"
+    retraining_frequency: monthly
+    explainability: "reason_codes array per recommendation"

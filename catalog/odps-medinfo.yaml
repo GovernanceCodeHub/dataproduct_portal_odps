@@ -1,0 +1,144 @@
+# =============================================================================
+# Open Data Product Specification (ODPS) 4.1 - product description
+# Product: Medical Information Inquiries
+# =============================================================================
+schema: https://opendataproducts.org/v4.1/schema/odps.yaml
+version: 4.1
+
+product:
+
+  contract:
+    id: contract-medinfo-1.0
+    type: dataContract
+    contractVersion: "1.0.0"
+    contractURL: https://contracts.pharmaco.example.com/medinfo/1.0.0
+
+  details:
+    en:
+      name: "Medical Information inquiries"
+      productID: DP-MEDINFO-001
+      governanceProfile: structured
+      portfolioPriority: high
+      valueProposition: >
+        Structured medical inquiry data supporting MSL engagement planning and
+        pharmacovigilance signal detection. Provides PII-scrubbed inquiry text,
+        topic codes, and adverse-event linkage for every HCP question received
+        by medical information centers.
+      description: >
+        Questions submitted by HCPs to PharmaCo's medical information function,
+        with structured topic codes, response tracking, and adverse-event
+        suspected flags. Inquiry text URLs are access-controlled to the medical
+        scope only. Records flagged as AE-suspected are forwarded to the
+        pharmacovigilance system (Argus Safety) with tracked handoff.
+      visibility: internal
+      status: active
+      productVersion: "1.0.0"
+
+  productStrategy:
+    status: Active
+    startDate: "2025-09-01"
+    endDate: "2027-09-01"
+
+    objectives:
+      - en: "Capture all medical inquiries with structured topic coding."
+      - en: "Flag AE-suspected inquiries within 24h for PV handoff."
+      - en: "Support MSL engagement planning with inquiry history."
+
+    strategicAlignment:
+      - en: "Pillar 3: Operate with regulatory excellence."
+
+    productKPIs:
+      - id: KPI-MEDINFO-001
+        name: "AE flag completeness"
+        description: "% of inquiries with ae_suspected field populated"
+        unit: "percent"
+        target: 100
+        direction: equals
+        frequency: daily
+        owner: "Medical Information"
+
+      - id: KPI-MEDINFO-002
+        name: "PV handoff timeliness"
+        description: "Hours from AE-suspected flag to PV case creation"
+        unit: "hours"
+        target: 24
+        direction: at_most
+        frequency: weekly
+        owner: "Medical Information"
+
+  SLA:
+    declarative:
+      operational:
+        name:
+          en: "Operational SLA"
+        dimensions:
+          - dimension: availability
+            objective: 995
+            unit: "permille"
+            weight: 4
+          - dimension: freshness
+            objective: 24
+            unit: "hours"
+            weight: 4
+
+  dataQuality:
+    declarative:
+      inquiry_integrity:
+        displaytitle:
+          en: "Inquiry data integrity"
+        dimensions:
+          - dimension: completeness_ae_suspected
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: completeness_topic_code
+            objective: 98
+            unit: "percent"
+            weight: 4
+          - dimension: response_tracking
+            objective: 95
+            unit: "percent"
+            weight: 3
+
+  dataAccess:
+    medical_inquiries:
+      outputPorttype: tables
+      description: "Medical inquiry records in Iceberg format"
+      endpoints:
+        - type: s3_iceberg
+          ref: "s3://pharmaco-bronze-{env}/medical/medinfo/inquiries/"
+        - type: glue_database
+          ref: "medinfo_{env}"
+
+  support:
+    email: medinfo-platform@pharmaco.example.com
+    documentationURL: https://docs.pharmaco.example.com/products/medinfo
+    slackChannel: "#data-product-medinfo"
+
+  license:
+    en:
+      scope: >
+        Internal use only. Inquiry text URLs restricted to c360_read_medical
+        scope. AE-suspected records subject to pharmacovigilance reporting
+        timelines.
+      governance: >
+        Access to inquiry free text requires Medical Affairs approval.
+        PV-flagged records must not be modified after handoff.
+
+  dataHolder:
+    en:
+      legalName: "PharmaCo Global Holdings Ltd."
+      email: data-office@pharmaco.example.com
+      URL: https://pharmaco.example.com
+      addressCountry: "US"
+
+x-portal:
+  data_product_id: dp-medinfo
+  url: https://portal.pharmaco.example.com/products/dp-medinfo
+x-pharma:
+  regulated: true
+  regulations:
+    - gdpr
+  pharmacovigilance:
+    handoff_system: "Argus Safety"
+    sla_to_pv_hours: 24

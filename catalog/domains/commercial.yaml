@@ -1,0 +1,48 @@
+# =============================================================================
+# ODPG Domain Node: Commercial
+# =============================================================================
+kind: Domain
+version: "1.0"
+
+domain:
+  id: dom-commercial
+  name:
+    en: "Commercial"
+  description:
+    en: >
+      PharmaCo's commercial domain encompassing sales operations, brand
+      marketing, field force management, and commercial analytics. Owns the
+      strategy for HCP targeting, omnichannel engagement, and market share
+      growth across all therapeutic areas.
+  scope:
+    en: >
+      Sales rep activity, prescribing analytics, segmentation, Next-Best-Action,
+      field force targeting, and brand marketing campaign analytics.
+
+  owner:
+    team: "Commercial Leadership"
+    role: "VP, Commercial Data & Analytics"
+    email: comm-analytics-director@pharmaco.example.com
+
+  dataProducts:
+    - dp-c360-hcp
+    - dp-rx-feed
+    - dp-nba
+
+  policies:
+    - pol-iqvia-license
+
+  useCases:
+    - uc-rep-targeting
+
+  businessObjectives:
+    - bo-commercial-excellence
+
+  stakeholders:
+    - "Sales Reps"
+    - "Sales Operations"
+    - "Brand Marketing"
+    - "Commercial Analytics"
+
+  status: active
+  tags: ["commercial", "sales", "marketing", "field-force"]

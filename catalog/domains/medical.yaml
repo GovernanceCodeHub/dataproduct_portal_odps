@@ -1,0 +1,48 @@
+# =============================================================================
+# ODPG Domain Node: Medical
+# =============================================================================
+kind: Domain
+version: "1.0"
+
+domain:
+  id: dom-medical
+  name:
+    en: "Medical"
+  description:
+    en: >
+      PharmaCo's medical domain covering Medical Affairs, Medical Science
+      Liaisons (MSLs), medical information, Key Opinion Leader (KOL) engagement,
+      and pharmacovigilance signal detection.
+  scope:
+    en: >
+      MSL activity management, KOL engagement planning, medical inquiry
+      tracking, adverse event linkage, and scientific exchange coordination.
+
+  owner:
+    team: "Medical Affairs"
+    role: "VP, Medical Affairs"
+    email: medical-affairs@pharmaco.example.com
+
+  dataProducts:
+    - dp-c360-hcp
+    - dp-medinfo
+
+  policies:
+    - pol-gdpr
+    - pol-hipaa
+
+  useCases:
+    - uc-msl-engagement
+    - uc-pv-signal
+
+  businessObjectives:
+    - bo-regulatory-excellence
+
+  stakeholders:
+    - "MSLs"
+    - "Medical Affairs Leadership"
+    - "Pharmacovigilance"
+    - "Medical Information"
+
+  status: active
+  tags: ["medical", "msl", "kol", "pharmacovigilance"]

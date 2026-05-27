@@ -1,0 +1,143 @@
+# =============================================================================
+# Open Data Product Specification (ODPS) 4.1 - product description
+# Product: OneKey HCP/HCO Master (Licensed)
+# =============================================================================
+schema: https://opendataproducts.org/v4.1/schema/odps.yaml
+version: 4.1
+
+product:
+
+  contract:
+    id: contract-onekey-2.3
+    type: dataContract
+    contractVersion: "2.3.0"
+    contractURL: https://contracts.pharmaco.example.com/onekey/2.3.0
+
+  details:
+    en:
+      name: "OneKey HCP/HCO master (licensed)"
+      productID: DP-MDM-ONEKEY-001
+      governanceProfile: structured
+      portfolioPriority: high
+      valueProposition: >
+        Mastered HCP and HCO reference data sourced from IQVIA OneKey.
+        Provides a single golden record for every healthcare professional and
+        organization PharmaCo interacts with, including affiliations, specialties,
+        and cross-reference identifiers (NPI, RPPS, GMC).
+      description: >
+        Weekly delta load of IQVIA OneKey data covering US and EU5 markets.
+        Supplies the primary HCP/HCO master for identity resolution across all
+        downstream products including Customer 360. Subject to IQVIA licensing
+        terms (contract IQ-2025-ONEKEY).
+      visibility: internal
+      status: active
+      productVersion: "2.3.0"
+
+  productStrategy:
+    status: Active
+    startDate: "2024-06-01"
+    endDate: "2027-06-01"
+
+    objectives:
+      - en: "Provide a single golden HCP/HCO record for all downstream products."
+      - en: "Maintain weekly delta refresh with <24h processing latency."
+      - en: "Ensure OneKey ID coverage across US and EU5 markets."
+
+    strategicAlignment:
+      - en: "Pillar 1: Become a customer-centric commercial organization."
+
+    productKPIs:
+      - id: KPI-ONEKEY-001
+        name: "OneKey coverage"
+        description: "% of target HCPs with a valid OneKey ID"
+        unit: "percent"
+        target: 90
+        direction: at_least
+        frequency: monthly
+        owner: "MDM Operations"
+
+      - id: KPI-ONEKEY-002
+        name: "Delta load freshness"
+        description: "Hours from IQVIA delivery to availability in bronze"
+        unit: "hours"
+        target: 24
+        direction: at_most
+        frequency: weekly
+        owner: "MDM Operations"
+
+  SLA:
+    declarative:
+      operational:
+        name:
+          en: "Operational SLA"
+        dimensions:
+          - dimension: availability
+            objective: 995
+            unit: "permille"
+            weight: 4
+          - dimension: freshness
+            objective: 7
+            unit: "days"
+            weight: 4
+
+  dataQuality:
+    declarative:
+      identity:
+        displaytitle:
+          en: "Master data quality"
+        dimensions:
+          - dimension: uniqueness_onekey_id
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: completeness_specialty
+            objective: 95
+            unit: "percent"
+            weight: 4
+          - dimension: completeness_npi_us
+            objective: 98
+            unit: "percent"
+            weight: 4
+
+  dataAccess:
+    hcp_hco_master:
+      outputPorttype: tables
+      description: "HCP and HCO master tables in Iceberg format"
+      endpoints:
+        - type: s3_iceberg
+          ref: "s3://pharmaco-bronze-{env}/external/iqvia/onekey/"
+        - type: glue_database
+          ref: "onekey_master_{env}"
+
+  support:
+    email: mdm-ops@pharmaco.example.com
+    documentationURL: https://docs.pharmaco.example.com/products/onekey
+    slackChannel: "#data-product-onekey"
+
+  license:
+    en:
+      scope: >
+        Internal use only. Licensed from IQVIA under contract IQ-2025-ONEKEY.
+        Downstream products that consume OneKey fields inherit the license
+        restrictions.
+      termination: >
+        Access terminates at IQVIA contract end. All derived datasets must
+        purge OneKey-sourced fields within 90 days of contract expiration.
+      governance: >
+        All consumers must have an approved use case and signed DUA.
+
+  dataHolder:
+    en:
+      legalName: "PharmaCo Global Holdings Ltd."
+      email: data-office@pharmaco.example.com
+      URL: https://pharmaco.example.com
+      addressCountry: "US"
+
+x-portal:
+  data_product_id: dp-onekey
+  url: https://portal.pharmaco.example.com/products/dp-onekey
+x-licensing:
+  vendor: IQVIA
+  contract_id: IQ-2025-ONEKEY
+  allowed_use: ["internal_analytics", "identity_resolution"]
+  forbidden_use: ["resale", "public_disclosure"]

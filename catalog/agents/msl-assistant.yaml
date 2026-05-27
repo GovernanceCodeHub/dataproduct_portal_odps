@@ -1,0 +1,65 @@
+# =============================================================================
+# ODPG Agent Node: MSL Assistant
+# =============================================================================
+kind: Agent
+version: "1.0"
+
+agent:
+  id: agent-msl-assistant
+  name:
+    en: "MSL Assistant"
+  description:
+    en: >
+      AI assistant for Medical Science Liaisons that provides KOL engagement
+      history, medical inquiry tracking, and scientific exchange planning
+      support using the C360 medical-scoped view and medical information data.
+  type: ai_assistant
+  purpose:
+    en: >
+      Help MSLs manage KOL relationships by surfacing engagement history,
+      recent medical inquiries, publication interactions, and affiliation
+      context to plan meaningful scientific exchanges.
+
+  owner:
+    team: "Medical Affairs"
+    email: medical-affairs@pharmaco.example.com
+
+  consumes:
+    - id: dp-c360-hcp
+      type: DataProduct
+      ref: "catalog/odps-c360-hcp.yaml"
+      accessScope: c360_read_medical
+    - id: dp-medinfo
+      type: DataProduct
+      ref: "catalog/odps-medinfo.yaml"
+      accessScope: c360_read_medical
+
+  supportsUseCases:
+    - uc-msl-engagement
+
+  users:
+    - role: "Medical Science Liaison"
+      team: "Medical Affairs"
+    - role: "Medical Affairs Director"
+      team: "Medical Affairs Leadership"
+
+  capabilities:
+    - "KOL engagement history with interaction timeline"
+    - "Medical inquiry tracking with topic codes and response status"
+    - "HCP-HCO affiliation context for institutional engagement"
+    - "Scientific exchange planning with topic gap analysis"
+    - "AE-suspected inquiry flagging for awareness (read-only)"
+
+  constraints:
+    - "No access to commercial Rx detail (payer_channel redacted in medical scope)"
+    - "No access to ToV ledger (c360_read_compliance only)"
+    - "No access to patient-level data"
+    - "Must not modify PV-flagged inquiry records after handoff"
+    - "Inquiry free text accessible only under c360_read_medical scope"
+
+  auth:
+    type: oauth2
+    scopes: ["c360.read"]
+
+  status: active
+  tags: ["ai", "assistant", "msl", "medical", "kol"]

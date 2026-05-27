@@ -1,0 +1,143 @@
+# =============================================================================
+# Open Data Product Specification (ODPS) 4.1 - product description
+# Product: Consent Records (OneTrust)
+# =============================================================================
+schema: https://opendataproducts.org/v4.1/schema/odps.yaml
+version: 4.1
+
+product:
+
+  contract:
+    id: contract-consent-1.2
+    type: dataContract
+    contractVersion: "1.2.0"
+    contractURL: https://contracts.pharmaco.example.com/consent/1.2.0
+
+  details:
+    en:
+      name: "Consent records (OneTrust)"
+      productID: DP-CONSENT-001
+      governanceProfile: enforced
+      portfolioPriority: critical
+      valueProposition: >
+        System-of-record consent data streamed from OneTrust. Provides the
+        authoritative source for every HCP's channel and purpose consent state,
+        enabling GDPR and HIPAA-compliant engagement across all downstream
+        products.
+      description: >
+        CDC-streamed consent records from OneTrust covering email, phone, SMS,
+        in-person, and web channels. Each record carries jurisdiction (GDPR,
+        HIPAA, PIPEDA), purpose (marketing, scientific, regulatory), and
+        evidence URL. Mandatory join for any outbound communication record in
+        Customer 360.
+      visibility: internal
+      status: active
+      productVersion: "1.2.0"
+
+  productStrategy:
+    status: Active
+    startDate: "2025-06-01"
+    endDate: "2027-06-01"
+
+    objectives:
+      - en: "Maintain real-time consent state for all HCPs across all channels."
+      - en: "Ensure 100% completeness of opt_in_status for every consent record."
+      - en: "Support GDPR right-to-be-forgotten propagation within 30 days."
+
+    strategicAlignment:
+      - en: "Pillar 3: Operate with regulatory excellence."
+
+    productKPIs:
+      - id: KPI-CONSENT-001
+        name: "Consent completeness"
+        description: "% of consent records with non-null opt_in_status"
+        unit: "percent"
+        target: 100
+        direction: equals
+        frequency: daily
+        owner: "Privacy Office"
+
+      - id: KPI-CONSENT-002
+        name: "CDC stream latency"
+        description: "p95 seconds from OneTrust change to bronze availability"
+        unit: "seconds"
+        target: 300
+        direction: at_most
+        frequency: daily
+        owner: "Privacy Office"
+
+  SLA:
+    declarative:
+      operational:
+        name:
+          en: "Operational SLA"
+        dimensions:
+          - dimension: availability
+            objective: 999
+            unit: "permille"
+            weight: 5
+          - dimension: freshness
+            objective: 5
+            unit: "minutes"
+            weight: 5
+
+  dataQuality:
+    declarative:
+      consent_integrity:
+        displaytitle:
+          en: "Consent data integrity"
+        dimensions:
+          - dimension: completeness_opt_in_status
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: completeness_jurisdiction
+            objective: 100
+            unit: "percent"
+            weight: 5
+          - dimension: completeness_evidence_url
+            objective: 95
+            unit: "percent"
+            weight: 4
+
+  dataAccess:
+    consent_records:
+      outputPorttype: tables
+      description: "Consent records in Iceberg format, CDC-refreshed"
+      endpoints:
+        - type: s3_iceberg
+          ref: "s3://pharmaco-bronze-{env}/privacy/onetrust/consent/"
+        - type: glue_database
+          ref: "consent_onetrust_{env}"
+
+  support:
+    email: privacy-office@pharmaco.example.com
+    documentationURL: https://docs.pharmaco.example.com/products/consent
+    slackChannel: "#data-product-consent"
+
+  license:
+    en:
+      scope: >
+        Internal use only by PharmaCo employees and approved contractors.
+        Consent data is the authoritative source for channel permissions and
+        must not be overridden or cached beyond its validity window.
+      governance: >
+        All consumers must join on consent state before outbound use. Any
+        system caching consent must refresh within 5 minutes of source change.
+
+  dataHolder:
+    en:
+      legalName: "PharmaCo Global Holdings Ltd."
+      email: data-office@pharmaco.example.com
+      URL: https://pharmaco.example.com
+      addressCountry: "US"
+
+x-portal:
+  data_product_id: dp-consent
+  url: https://portal.pharmaco.example.com/products/dp-consent
+x-pharma:
+  regulated: true
+  regulations:
+    - gdpr
+    - hipaa
+  consent_source_of_truth: onetrust

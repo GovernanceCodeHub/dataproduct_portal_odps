@@ -1,0 +1,81 @@
+# =============================================================================
+# ODPG Policy Node: EFPIA Disclosure Code
+# =============================================================================
+kind: Policy
+version: "1.0"
+
+policy:
+  id: pol-efpia
+  name:
+    en: "EFPIA Disclosure Code"
+  description:
+    en: >
+      European Federation of Pharmaceutical Industries and Associations code
+      requiring annual disclosure of transfers of value from pharmaceutical
+      companies to HCPs and HCOs in EU member states. Applies to PharmaCo's
+      EU5 operations (France, Germany, Italy, Spain, UK).
+  type: regulation
+  jurisdiction: "EU (EU5)"
+  authority: "EFPIA"
+  citation: "EFPIA Code on Disclosure of Transfers of Value (2014, rev.)"
+  url: https://www.efpia.eu/relationships-code/disclosure-code
+
+  applicableProducts:
+    - dp-c360-hcp
+
+  requirements:
+    - id: req-efpia-001
+      name:
+        en: "Annual HCP/HCO ToV disclosure"
+      description:
+        en: >
+          Transfers of value to HCPs and HCOs in each EU member state must be
+          disclosed annually on the relevant national platform, itemized by
+          recipient and category.
+      enforcement: attestation
+
+    - id: req-efpia-002
+      name:
+        en: "Country-level reporting"
+      description:
+        en: >
+          ToV disclosures must be filed per country where the recipient HCP/HCO
+          is registered, respecting local variations in disclosure thresholds
+          and categories.
+      enforcement: manual
+
+    - id: req-efpia-003
+      name:
+        en: "Ledger immutability"
+      description:
+        en: >
+          Same monthly freeze and cryptographic signing mechanism as Sunshine
+          Act applies to EFPIA-reportable transfers.
+      enforcement: automated
+
+  controls:
+    - id: ctrl-efpia-001
+      name:
+        en: "Shared ToV ledger with Sunshine Act"
+      description:
+        en: >
+          fact_transfer_of_value serves both Sunshine Act (US) and EFPIA (EU)
+          reporting. Country-specific filters derive EFPIA submissions.
+      frequency: monthly
+
+    - id: ctrl-efpia-002
+      name:
+        en: "Country-level filing workflow"
+      description:
+        en: >
+          Compliance team generates per-country EFPIA disclosure reports from
+          the signed ledger, with local format adaptations for DE, FR, IT, ES, UK.
+      frequency: annual
+
+  status: active
+  effectiveDate: "2016-06-01"
+  reviewDate: "2027-01-01"
+  owner:
+    team: "Compliance"
+    email: compliance@pharmaco.example.com
+  tags: ["efpia", "tov", "disclosure", "eu", "regulation"]

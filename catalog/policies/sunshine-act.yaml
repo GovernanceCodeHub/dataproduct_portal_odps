@@ -1,0 +1,91 @@
+# =============================================================================
+# ODPG Policy Node: US Sunshine Act
+# =============================================================================
+kind: Policy
+version: "1.0"
+
+policy:
+  id: pol-sunshine-act
+  name:
+    en: "Physician Payments Sunshine Act (US)"
+  description:
+    en: >
+      US federal statute requiring applicable manufacturers to report payments
+      and other transfers of value to physicians and teaching hospitals to CMS,
+      published annually as Open Payments. Applies to all PharmaCo HCP
+      transfer-of-value data.
+  type: regulation
+  jurisdiction: "US"
+  authority: "Centers for Medicare & Medicaid Services (CMS)"
+  citation: "42 U.S.C. 1320a-7h (Section 6002 of the Affordable Care Act)"
+  url: https://www.cms.gov/openpayments
+
+  applicableProducts:
+    - dp-c360-hcp
+
+  requirements:
+    - id: req-sunshine-001
+      name:
+        en: "Annual ToV reporting"
+      description:
+        en: >
+          All transfers of value to physicians and teaching hospitals must be
+          reported to CMS Open Payments annually, covering meals, honoraria,
+          consulting fees, travel reimbursement, research grants, and samples.
+      enforcement: attestation
+
+    - id: req-sunshine-002
+      name:
+        en: "Monthly ledger freeze"
+      description:
+        en: >
+          The fact_transfer_of_value table must be frozen monthly with a
+          cryptographic signature to ensure immutability and auditability.
+      enforcement: automated
+
+    - id: req-sunshine-003
+      name:
+        en: "Compliance officer sign-off"
+      description:
+        en: >
+          Each regulatory filing release requires explicit sign-off from the
+          Compliance Officer before submission to CMS.
+      enforcement: manual
+
+  controls:
+    - id: ctrl-sunshine-001
+      name:
+        en: "KMS-signed monthly ledger"
+      description:
+        en: >
+          Airflow DAG freezes fact_transfer_of_value monthly, computes SHA-256
+          hash of canonical rows, and signs with KMS key
+          kms:alias/pharmaco-tov-signer. Signed archive stored in
+          s3://pharmaco-regulated-{env}/tov/.
+      frequency: monthly
+
+    - id: ctrl-sunshine-002
+      name:
+        en: "Compliance review workflow"
+      description:
+        en: >
+          Before annual CMS submission, Compliance Officer reviews the full
+          year's ledger, verifies signatures, and attests via the Portal.
+      frequency: annual
+
+    - id: ctrl-sunshine-003
+      name:
+        en: "ToV timeliness monitoring"
+      description:
+        en: >
+          KPI-005 (ToV report timeliness) tracks on-time filing rate with a
+          target of 100%. Alerts fire if any filing approaches its deadline.
+      frequency: quarterly
+
+  status: active
+  effectiveDate: "2013-08-01"
+  reviewDate: "2027-01-01"
+  owner:
+    team: "Compliance"
+    email: compliance@pharmaco.example.com
+  tags: ["sunshine-act", "tov", "open-payments", "us", "regulation"]
