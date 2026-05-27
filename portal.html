@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PharmaCo Data Product Portal</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy-900:#0a1628;--navy-800:#0f2140;--navy-700:#132d5e;--navy-600:#1a3a6e;
+  --navy-500:#1e4d8c;--navy-400:#2563a8;--navy-300:#3b82c4;--navy-200:#6ba3d6;
+  --navy-100:#a3c4e9;--navy-50:#dbe8f5;--navy-25:#eef4fa;
+  --white:#ffffff;--gray-50:#f8f9fb;--gray-100:#f1f3f7;--gray-200:#e2e6ee;
+  --gray-300:#c8cdd8;--gray-400:#9aa1b2;--gray-500:#6b7280;--gray-600:#4b5563;
+  --gray-700:#374151;--gray-800:#1f2937;
+  --green:#16a34a;--green-bg:#f0fdf4;--amber:#d97706;--amber-bg:#fffbeb;
+  --red:#dc2626;--red-bg:#fef2f2;--blue-bg:#eff6ff;
+  --sidebar-w:260px;--radius:10px;--shadow:0 1px 3px rgba(10,22,40,.08),0 1px 2px rgba(10,22,40,.06);
+  --shadow-md:0 4px 12px rgba(10,22,40,.1);--shadow-lg:0 10px 30px rgba(10,22,40,.12);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--gray-50);color:var(--gray-800);display:flex;min-height:100vh;font-size:14px;line-height:1.5}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--navy-900);color:var(--white);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sidebar-brand{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-brand h1{font-size:15px;font-weight:700;letter-spacing:.3px;color:var(--white)}
+.sidebar-brand p{font-size:11px;color:var(--navy-200);margin-top:4px;letter-spacing:.2px}
+.sidebar-nav{flex:1;padding:12px 10px}
+.nav-section{margin-bottom:16px}
+.nav-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--navy-300);padding:8px 12px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--navy-100);font-weight:400;text-decoration:none;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.07);color:var(--white)}
+.nav-item.active{background:var(--navy-600);color:var(--white);font-weight:500}
+.nav-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--navy-600);color:var(--navy-100);font-size:11px;padding:1px 7px;border-radius:10px;font-weight:500}
+.nav-item.active .nav-badge{background:var(--navy-400);color:var(--white)}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:var(--navy-300)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh}
+.topbar{background:var(--white);border-bottom:1px solid var(--gray-200);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h2{font-size:18px;font-weight:600;color:var(--navy-800)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.env-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.env-prd{background:var(--green-bg);color:var(--green)}
+.content{padding:28px 32px}
+
+/* PAGE */
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);transition:box-shadow .2s}
+.stat-card:hover{box-shadow:var(--shadow-md)}
+.stat-label{font-size:12px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:28px;font-weight:700;color:var(--navy-800);margin-top:4px}
+.stat-sub{font-size:12px;color:var(--gray-400);margin-top:2px}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+.stat-icon.blue{background:var(--blue-bg);color:var(--navy-500)}
+.stat-icon.green{background:var(--green-bg);color:var(--green)}
+.stat-icon.amber{background:var(--amber-bg);color:var(--amber)}
+.stat-icon.red{background:var(--red-bg);color:var(--red)}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;margin-bottom:28px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:22px;transition:all .2s}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--navy-100)}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600;color:var(--navy-800)}
+.card-subtitle{font-size:12px;color:var(--gray-500);margin-top:2px}
+.card-body{font-size:13px;color:var(--gray-600);line-height:1.6}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.2px}
+.badge-active{background:var(--green-bg);color:var(--green)}
+.badge-critical{background:var(--red-bg);color:var(--red)}
+.badge-high{background:var(--amber-bg);color:var(--amber)}
+.badge-medium{background:var(--blue-bg);color:var(--navy-500)}
+.badge-enforced{background:var(--navy-800);color:var(--white)}
+.badge-structured{background:var(--navy-50);color:var(--navy-600)}
+.badge-derived{background:var(--blue-bg);color:var(--navy-500)}
+.badge-source{background:var(--gray-100);color:var(--gray-600)}
+.badge-tables{background:var(--blue-bg);color:var(--navy-500)}
+.badge-stream{background:var(--green-bg);color:var(--green)}
+.badge-api{background:var(--amber-bg);color:var(--amber)}
+.badge-regulation{background:var(--red-bg);color:var(--red)}
+.badge-license{background:var(--amber-bg);color:var(--amber)}
+.badge-risk{background:var(--red-bg);color:var(--red)}
+.badge-quality{background:var(--amber-bg);color:var(--amber)}
+.badge-restricted{background:var(--red-bg);color:var(--red)}
+.badge-confidential{background:var(--amber-bg);color:var(--amber)}
+.badge-new{background:var(--blue-bg);color:var(--navy-500)}
+.badge-reviewing{background:var(--amber-bg);color:var(--amber)}
+
+/* TAGS */
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{display:inline-block;padding:2px 8px;background:var(--gray-100);color:var(--gray-600);border-radius:4px;font-size:11px;font-weight:500}
+
+/* TABLE */
+.table-wrap{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);overflow:hidden;margin-bottom:28px}
+.table-wrap table{width:100%;border-collapse:collapse}
+.table-wrap th{background:var(--navy-25);text-align:left;padding:12px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--navy-600);font-weight:600;border-bottom:2px solid var(--gray-200)}
+.table-wrap td{padding:12px 16px;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);vertical-align:top}
+.table-wrap tr:hover td{background:var(--navy-25)}
+.table-wrap td code{background:var(--gray-100);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--navy-700)}
+
+/* SECTION HEADERS */
+.section-header{margin-bottom:20px}
+.section-header h3{font-size:16px;font-weight:600;color:var(--navy-800)}
+.section-header p{font-size:13px;color:var(--gray-500);margin-top:4px}
+
+/* KPI BARS */
+.kpi-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:20px;margin-bottom:14px}
+.kpi-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.kpi-name{font-size:14px;font-weight:600;color:var(--navy-800)}
+.kpi-target{font-size:13px;color:var(--gray-500)}
+.kpi-bar-bg{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;margin-top:8px}
+.kpi-bar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.kpi-meta{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--gray-400)}
+
+/* GRAPH */
+#graph-container{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);overflow:hidden;position:relative}
+#graph-svg{width:100%;display:block}
+.graph-legend{position:absolute;top:16px;left:16px;background:var(--white);border:1px solid var(--gray-200);border-radius:8px;padding:14px 16px;font-size:12px;box-shadow:var(--shadow)}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.legend-item:last-child{margin-bottom:0}
+.legend-dot{width:12px;height:12px;border-radius:50%}
+.graph-controls{position:absolute;top:16px;right:16px;display:flex;gap:6px}
+.graph-btn{background:var(--white);border:1px solid var(--gray-200);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--navy-700);font-weight:500}
+.graph-btn:hover{background:var(--navy-25);border-color:var(--navy-200)}
+.node-label{font-size:10px;fill:var(--gray-700);font-weight:500;pointer-events:none}
+.tooltip{position:absolute;background:var(--navy-900);color:var(--white);padding:8px 14px;border-radius:6px;font-size:12px;pointer-events:none;z-index:200;max-width:260px;box-shadow:var(--shadow-lg)}
+
+/* DETAIL PANEL */
+.detail-panel{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.detail-panel h4{font-size:15px;font-weight:600;color:var(--navy-800);margin-bottom:12px}
+.detail-row{display:flex;padding:8px 0;border-bottom:1px solid var(--gray-100)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{width:180px;font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.detail-value{font-size:13px;color:var(--gray-700);flex:1}
+
+/* LISTS */
+.check-list{list-style:none;padding:0}
+.check-list li{padding:6px 0;font-size:13px;color:var(--gray-600);display:flex;align-items:flex-start;gap:8px}
+.check-list li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--navy-400);border-radius:50%;margin-top:7px;flex-shrink:0}
+.constraint-list li::before{background:var(--red)}
+
+/* GRID TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+/* SCORE CIRCLE */
+.score-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.score-critical{background:var(--red-bg);color:var(--red);border:2px solid var(--red)}
+.score-high{background:var(--amber-bg);color:var(--amber);border:2px solid var(--amber)}
+
+/* ROADMAP */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:10px;top:4px;bottom:4px;width:2px;background:var(--navy-100)}
+.timeline-item{position:relative;margin-bottom:20px}
+.timeline-dot{position:absolute;left:-22px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--navy-500);border:2px solid var(--white);box-shadow:0 0 0 2px var(--navy-200)}
+.timeline-item.completed .timeline-dot{background:var(--green)}
+.timeline-content{background:var(--white);border:1px solid var(--gray-200);border-radius:8px;padding:14px 18px}
+.timeline-title{font-size:13px;font-weight:600;color:var(--navy-800)}
+.timeline-desc{font-size:12px;color:var(--gray-500);margin-top:2px}
+.timeline-period{font-size:11px;color:var(--navy-400);font-weight:600;margin-top:4px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:3px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <h1>PharmaCo</h1>
+    <p>Data Product Portal</p>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-item active" data-page="dashboard"><span class="nav-icon">&#9632;</span>Dashboard</a>
+      <a class="nav-item" data-page="graph"><span class="nav-icon">&#9672;</span>Product Graph</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Catalog</div>
+      <a class="nav-item" data-page="products"><span class="nav-icon">&#9654;</span>Data Products<span class="nav-badge">6</span></a>
+      <a class="nav-item" data-page="datasets"><span class="nav-icon">&#8801;</span>Datasets<span class="nav-badge">6</span></a>
+      <a class="nav-item" data-page="outputs"><span class="nav-icon">&#8599;</span>Data Outputs<span class="nav-badge">4</span></a>
+      <a class="nav-item" data-page="usecases"><span class="nav-icon">&#9733;</span>Use Cases<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Performance</div>
+      <a class="nav-item" data-page="kpis"><span class="nav-icon">&#9650;</span>KPIs<span class="nav-badge">5</span></a>
+      <a class="nav-item" data-page="objectives"><span class="nav-icon">&#9673;</span>Objectives<span class="nav-badge">2</span></a>
+      <a class="nav-item" data-page="signals"><span class="nav-icon">&#9888;</span>Signals<span class="nav-badge">2</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Governance</div>
+      <a class="nav-item" data-page="policies"><span class="nav-icon">&#9881;</span>Policies<span class="nav-badge">5</span></a>
+      <a class="nav-item" data-page="domains"><span class="nav-icon">&#9635;</span>Domains<span class="nav-badge">4</span></a>
+      <a class="nav-item" data-page="access"><span class="nav-icon">&#9919;</span>Access Scopes<span class="nav-badge">4</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">AI & Automation</div>
+      <a class="nav-item" data-page="agents"><span class="nav-icon">&#9670;</span>AI Agents<span class="nav-badge">2</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Reference</div>
+      <a class="nav-item" data-page="cdm"><span class="nav-icon">&#9638;</span>Data Model<span class="nav-badge">14</span></a>
+      <a class="nav-item" data-page="roadmap"><span class="nav-icon">&#9654;</span>Roadmap</a>
+    </div>
+  </div>
+  <div class="sidebar-footer">ODPS 4.1 &middot; ODPC 1.0 &middot; ODPG 1.0<br>Last updated: May 2026</div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div class="topbar-right">
+      <span class="env-badge env-prd">PRD eu-west-1</span>
+      <span class="env-badge" style="background:var(--blue-bg);color:var(--navy-500)">PRD-US us-east-1</span>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon blue">&#9654;</div><div class="stat-label">Data Products</div><div class="stat-value">6</div><div class="stat-sub">2 critical, 4 high priority</div></div>
+        <div class="stat-card"><div class="stat-icon green">&#8801;</div><div class="stat-label">Datasets</div><div class="stat-value">6</div><div class="stat-sub">3 restricted, 3 confidential</div></div>
+        <div class="stat-card"><div class="stat-icon amber">&#9733;</div><div class="stat-label">Use Cases</div><div class="stat-value">4</div><div class="stat-sub">3 critical, 1 high priority</div></div>
+        <div class="stat-card"><div class="stat-icon blue">&#9881;</div><div class="stat-label">Policies</div><div class="stat-value">5</div><div class="stat-sub">4 regulations, 1 license</div></div>
+        <div class="stat-card"><div class="stat-icon green">&#9650;</div><div class="stat-label">KPIs Tracked</div><div class="stat-value">5</div><div class="stat-sub">Across C360 product</div></div>
+        <div class="stat-card"><div class="stat-icon red">&#9888;</div><div class="stat-label">Active Signals</div><div class="stat-value">2</div><div class="stat-sub">1 risk, 1 quality</div></div>
+      </div>
+
+      <div class="section-header"><h3>Flagship Product: Customer 360 - HCP & HCO</h3><p>Unified, consent-aware view of every Healthcare Professional and Healthcare Organization</p></div>
+      <div class="detail-panel">
+        <div class="two-col">
+          <div>
+            <div class="detail-row"><div class="detail-label">Product ID</div><div class="detail-value">DP-C360-HCP-001</div></div>
+            <div class="detail-row"><div class="detail-label">Version</div><div class="detail-value">1.0.0</div></div>
+            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value"><span class="badge badge-active">Active</span></div></div>
+            <div class="detail-row"><div class="detail-label">Type</div><div class="detail-value"><span class="badge badge-derived">Derived</span></div></div>
+            <div class="detail-row"><div class="detail-label">Priority</div><div class="detail-value"><span class="badge badge-critical">Critical</span></div></div>
+            <div class="detail-row"><div class="detail-label">Governance</div><div class="detail-value"><span class="badge badge-enforced">Enforced</span></div></div>
+          </div>
+          <div>
+            <div class="detail-row"><div class="detail-label">Owner</div><div class="detail-value">Commercial Data & Analytics</div></div>
+            <div class="detail-row"><div class="detail-label">Domains</div><div class="detail-value">Commercial, Medical</div></div>
+            <div class="detail-row"><div class="detail-label">Environments</div><div class="detail-value">dev, tst, prd (eu-west-1), prd-us (us-east-1)</div></div>
+            <div class="detail-row"><div class="detail-label">Inputs</div><div class="detail-value">5 datasets</div></div>
+            <div class="detail-row"><div class="detail-label">Outputs</div><div class="detail-value">4 surfaces (tables, stream, API, ledger)</div></div>
+            <div class="detail-row"><div class="detail-label">Regulations</div><div class="detail-value">Sunshine Act, EFPIA, GDPR, HIPAA</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header"><h3>Data Output Surfaces</h3></div>
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        <div class="stat-card"><div class="stat-icon blue">&#9638;</div><div class="stat-label">Curated Tables (Gold)</div><div class="stat-value" style="font-size:18px">4 platforms</div><div class="stat-sub">Glue &middot; Unity Catalog &middot; Snowflake &middot; Athena</div><div style="margin-top:8px"><span class="badge badge-tables">Freshness: 60 min</span></div></div>
+        <div class="stat-card"><div class="stat-icon green">&#9656;</div><div class="stat-label">Engagement Stream</div><div class="stat-value" style="font-size:18px">Real-time</div><div class="stat-sub">Kinesis &middot; Kafka</div><div style="margin-top:8px"><span class="badge badge-stream">Latency: 60s</span></div></div>
+        <div class="stat-card"><div class="stat-icon red">&#9919;</div><div class="stat-label">ToV Ledger (Regulated)</div><div class="stat-value" style="font-size:18px">Signed</div><div class="stat-sub">Glue &middot; S3 Signed Archive</div><div style="margin-top:8px"><span class="badge badge-critical">Retention: 10 yr</span></div></div>
+        <div class="stat-card"><div class="stat-icon amber">&#9670;</div><div class="stat-label">HCP Profile API</div><div class="stat-value" style="font-size:18px">REST</div><div class="stat-sub">API Gateway &middot; OAuth2</div><div style="margin-top:8px"><span class="badge badge-api">p95: 250ms</span></div></div>
+      </div>
+    </div>
+
+    <!-- GRAPH -->
+    <div class="page" id="page-graph">
+      <div id="graph-container" style="height:640px">
+        <div class="graph-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#1e4d8c"></div>Data Product</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Dataset</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>Use Case</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>KPI</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>Business Objective</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>Policy</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#475569"></div>Domain</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c026d3"></div>Agent</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ea580c"></div>API</div>
+        </div>
+        <div class="graph-controls">
+          <button class="graph-btn" onclick="resetGraph()">Reset Zoom</button>
+          <button class="graph-btn" onclick="centerGraph()">Center</button>
+        </div>
+        <svg id="graph-svg"></svg>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="section-header"><h3>Data Products</h3><p>All registered data products in the PharmaCo portfolio</p></div>
+      <div class="card-grid" id="products-grid"></div>
+    </div>
+
+    <!-- DATASETS -->
+    <div class="page" id="page-datasets">
+      <div class="section-header"><h3>Datasets</h3><p>Input datasets consumed by data products</p></div>
+      <div class="table-wrap"><table id="datasets-table"><thead><tr><th>Name</th><th>Domain</th><th>Sensitivity</th><th>Storage</th><th>Owner</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <!-- OUTPUTS -->
+    <div class="page" id="page-outputs">
+      <div class="section-header"><h3>Data Outputs</h3><p>Surfaces exposed by the Customer 360 product</p></div>
+      <div class="card-grid" id="outputs-grid"></div>
+    </div>
+
+    <!-- USE CASES -->
+    <div class="page" id="page-usecases">
+      <div class="section-header"><h3>Use Cases</h3><p>Business use cases supported by the data product portfolio</p></div>
+      <div class="card-grid" id="usecases-grid"></div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="page" id="page-kpis">
+      <div class="section-header"><h3>Product KPIs</h3><p>Key performance indicators tracked for the Customer 360 product</p></div>
+      <div id="kpis-container"></div>
+    </div>
+
+    <!-- OBJECTIVES -->
+    <div class="page" id="page-objectives">
+      <div class="section-header"><h3>Business Objectives</h3><p>Strategic objectives supported by the data product portfolio</p></div>
+      <div class="card-grid" id="objectives-grid"></div>
+    </div>
+
+    <!-- SIGNALS -->
+    <div class="page" id="page-signals">
+      <div class="section-header"><h3>Active Signals</h3><p>Risks and quality issues detected across the portfolio</p></div>
+      <div class="card-grid" id="signals-grid"></div>
+    </div>
+
+    <!-- POLICIES -->
+    <div class="page" id="page-policies">
+      <div class="section-header"><h3>Governance Policies</h3><p>Regulatory and licensing policies governing data products</p></div>
+      <div class="card-grid" id="policies-grid"></div>
+    </div>
+
+    <!-- DOMAINS -->
+    <div class="page" id="page-domains">
+      <div class="section-header"><h3>Domains</h3><p>Organizational domains and their data product alignment</p></div>
+      <div class="card-grid" id="domains-grid"></div>
+    </div>
+
+    <!-- ACCESS -->
+    <div class="page" id="page-access">
+      <div class="section-header"><h3>Access Scopes</h3><p>Portal-managed access scopes translated into IAM/Unity/Snowflake roles</p></div>
+      <div class="card-grid" id="access-grid"></div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="page" id="page-agents">
+      <div class="section-header"><h3>AI Agents</h3><p>AI-powered agents consuming data products</p></div>
+      <div id="agents-container"></div>
+    </div>
+
+    <!-- CDM -->
+    <div class="page" id="page-cdm">
+      <div class="section-header"><h3>Common Data Model</h3><p>14 tables across 3 layers: Hub, Engagement, Commercial</p></div>
+      <div id="cdm-container"></div>
+    </div>
+
+    <!-- ROADMAP -->
+    <div class="page" id="page-roadmap">
+      <div class="section-header"><h3>Delivery Roadmap</h3><p>Customer 360 v1.0 delivery milestones (17 weeks)</p></div>
+      <div class="timeline" id="roadmap-container"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none"></div>
+
+<script>
+// ============================================================================
+// DATA
+// ============================================================================
+const products = [
+  {id:"dp-c360-hcp",productID:"DP-C360-HCP-001",name:"Customer 360 - HCP & HCO",version:"1.0.0",status:"active",type:"derived",domains:["commercial","medical"],owner:"Commercial Data & Analytics",priority:"critical",governance:"enforced",desc:"Unified, consent-aware view of HCP/HCO engagement, Rx, ToV and segmentation."},
+  {id:"dp-onekey",productID:"DP-MDM-ONEKEY-001",name:"OneKey HCP/HCO master (licensed)",version:"2.3.0",status:"active",type:"source-aligned",domains:["master_data"],owner:"MDM Operations",priority:"high",governance:"structured",desc:"Mastered HCP and HCO reference data sourced from IQVIA OneKey."},
+  {id:"dp-rx-feed",productID:"DP-RX-FEED-001",name:"Prescription claims feed (licensed)",version:"1.4.0",status:"active",type:"source-aligned",domains:["commercial"],owner:"External Data Ops",priority:"high",governance:"structured",desc:"Third-party prescription claims, weekly load from IQVIA Xponent."},
+  {id:"dp-consent",productID:"DP-CONSENT-001",name:"Consent records (OneTrust)",version:"1.2.0",status:"active",type:"source-aligned",domains:["privacy"],owner:"Privacy Office",priority:"critical",governance:"enforced",desc:"System-of-record consent data streamed from OneTrust."},
+  {id:"dp-nba",productID:"DP-NBA-MODEL-001",name:"Next-Best-Action recommendations",version:"0.9.0",status:"active",type:"derived",domains:["commercial"],owner:"Data Science - Commercial",priority:"high",governance:"structured",desc:"Per-HCP per-product recommendation scores - consumes C360."},
+  {id:"dp-medinfo",productID:"DP-MEDINFO-001",name:"Medical Information inquiries",version:"1.0.0",status:"active",type:"source-aligned",domains:["medical"],owner:"Medical Information",priority:"high",governance:"structured",desc:"Medical inquiries with PV handoff, topic codes, and AE flagging."}
+];
+
+const datasets = [
+  {id:"ds-crm-veeva-events",name:"crm_veeva_events",display:"CRM engagement events (Veeva)",domain:"commercial_medical",sensitivity:"confidential",storage:"s3_iceberg",location:"s3://pharmaco-bronze-{env}/crm/veeva/events/",owner:"crm-platform@pharmaco.example.com"},
+  {id:"ds-rx-iqvia-claims",name:"rx_iqvia_claims",display:"Prescription claims (IQVIA Xponent / Komodo)",domain:"commercial_medical",sensitivity:"restricted",storage:"s3_iceberg",location:"s3://pharmaco-bronze-{env}/external/iqvia/xponent/",owner:"external-data-ops@pharmaco.example.com"},
+  {id:"ds-marketing-engagement",name:"marketing_engagement",display:"Marketing channel engagement (Salesforce MC + web)",domain:"commercial_medical",sensitivity:"confidential",storage:"s3_iceberg",location:"s3://pharmaco-bronze-{env}/marketing/sfmc/",owner:"marketing-ops@pharmaco.example.com"},
+  {id:"ds-consent-onetrust",name:"consent_onetrust",display:"Consent records (OneTrust)",domain:"privacy",sensitivity:"restricted",storage:"s3_iceberg",location:"s3://pharmaco-bronze-{env}/privacy/onetrust/consent/",owner:"privacy-office@pharmaco.example.com"},
+  {id:"ds-medinfo-inquiries",name:"medinfo_inquiries",display:"Medical Information inquiries",domain:"medical",sensitivity:"restricted",storage:"s3_iceberg",location:"s3://pharmaco-bronze-{env}/medical/medinfo/inquiries/",owner:"medinfo-platform@pharmaco.example.com"},
+  {id:"ds-onekey-master",name:"onekey_hcp_hco_master",display:"IQVIA OneKey HCP/HCO master",domain:"master_data",sensitivity:"confidential",storage:"s3_iceberg",location:"s3://pharmaco-bronze-{env}/external/iqvia/onekey/",owner:"mdm-ops@pharmaco.example.com"}
+];
+
+const outputs = [
+  {id:"do-c360-hcp-curated",display:"C360 - HCP curated tables (gold)",type:"tables",scopes:["c360_read_commercial","c360_read_medical","c360_read_compliance","c360_read_pv"],sla:"Freshness: 60 min | Availability: 99.5%",surfaces:["Glue Database","Unity Catalog","Snowflake Share","Athena Workgroup"],pii:true,desc:"Curated, joined, consent-filtered HCP-centric tables including dim_hcp, dim_hco, fact_engagement, fact_prescription, fact_segmentation, fact_nba_recommendation."},
+  {id:"do-c360-engagement-stream",display:"C360 - Real-time engagement stream",type:"stream",scopes:["c360_read_commercial","c360_read_medical"],sla:"Latency: 60s | Availability: 99.9%",surfaces:["Kinesis Stream","Kafka Topic"],pii:false,desc:"Normalized engagement events emitted within 60s of source capture. Consumed by the NBA model and the rep mobile app."},
+  {id:"do-c360-tov-ledger",display:"C360 - Transfer-of-Value ledger (regulated)",type:"tables",scopes:["c360_read_compliance"],sla:"Freshness: daily | Availability: 99.9% | Retention: 10 yr",surfaces:["Glue Database","S3 Signed Archive"],pii:true,desc:"Append-only, signed ledger of every HCP transfer of value. Frozen monthly with cryptographic signature for Sunshine Act/EFPIA."},
+  {id:"do-c360-hcp-api",display:"C360 HCP profile API",type:"api",scopes:["c360_read_commercial","c360_read_medical"],sla:"p95 Latency: 250ms | Availability: 99.9%",surfaces:["API Gateway (OAuth2)"],pii:false,desc:"Read-only REST API serving a single HCP's 360 profile. Backed by DynamoDB cache. Used by field rep mobile app and Veeva embedded panel."}
+];
+
+const useCases = [
+  {id:"uc-rep-targeting",name:"Field rep targeting and call planning",domains:["commercial"],stakeholders:["Sales Reps","Sales Operations","Brand Marketing"],score:9.1,value:"critical",effort:"medium",category:"juicyAndWorthIt",priority:"critical",kpis:["KPI-001","KPI-003","KPI-004"],decision:"Which HCPs to call this week, with which message, on which channel.",outcome:"+15% in priority HCP coverage, +8% in qualified call rate."},
+  {id:"uc-msl-engagement",name:"MSL KOL engagement planning",domains:["medical"],stakeholders:["MSLs","Medical Affairs Leadership"],score:7.8,value:"high",effort:"medium",category:"juicyAndWorthIt",priority:"high",kpis:["KPI-001"],decision:"Which KOLs to engage, on which topics, when.",outcome:"Reduced redundant engagement; higher KOL satisfaction."},
+  {id:"uc-sunshine-act",name:"Sunshine Act / EFPIA disclosure",domains:["compliance"],stakeholders:["Compliance Officer","Legal"],score:9.5,value:"critical",effort:"low",category:"quickWins",priority:"critical",kpis:["KPI-005"],decision:"What was transferred, to whom, when, for what purpose.",outcome:"100% on-time, accurate filings; zero adverse findings in audit."},
+  {id:"uc-pv-signal",name:"Adverse event linkage and signal correlation",domains:["medical","safety"],stakeholders:["Pharmacovigilance","Medical Safety"],score:8.7,value:"critical",effort:"medium",category:"juicyAndWorthIt",priority:"critical",kpis:["REL-KPI-001"],decision:"Which interactions preceded an AE report and what patterns exist.",outcome:"Mean time to first signal correlation < 24h."}
+];
+
+const kpis = [
+  {id:"KPI-001",name:"HCP coverage",target:98,current:94,unit:"%",direction:"at_least",frequency:"monthly",owner:"Director, Commercial Analytics",calc:"count(distinct hcp_id where is_current) / count(distinct target_universe)"},
+  {id:"KPI-002",name:"Consent currency",target:95,current:91,unit:"%",direction:"at_least",frequency:"daily",owner:"Privacy Office",calc:"rows with consent_valid=true / total rows"},
+  {id:"KPI-003",name:"Rep adoption DAU/MAU",target:70,current:62,unit:"%",direction:"at_least",frequency:"weekly",owner:"Sales Operations",calc:"DAU / MAU * 100"},
+  {id:"KPI-004",name:"NBA precision @ top 10",target:35,current:29,unit:"%",direction:"at_least",frequency:"monthly",owner:"Data Science",calc:"actioned_top10_with_positive_outcome / actioned_top10"},
+  {id:"KPI-005",name:"ToV report timeliness",target:100,current:100,unit:"%",direction:"equals",frequency:"quarterly",owner:"Compliance",calc:"on_time_filings / total_filings * 100"}
+];
+
+const objectives = [
+  {id:"bo-commercial-excellence",name:"Commercial Excellence FY2026",desc:"Lift commercial productivity and customer engagement quality.",owner:"Commercial Leadership",priority:"critical",outcomes:["+15% Commercial Field Productivity Index.","+10% market share in top-3 brands."],kpis:["KPI-001","KPI-003","KPI-004"]},
+  {id:"bo-regulatory-excellence",name:"Regulatory & Compliance Excellence",desc:"Zero adverse audit findings across Sunshine Act, EFPIA, GDPR, HIPAA.",owner:"Compliance",priority:"critical",outcomes:["100% on-time regulatory filings.","Zero adverse audit findings."],kpis:["KPI-005"]}
+];
+
+const signals = [
+  {id:"sig-consent-decay-eu5",name:"Consent freshness decay across EU5",type:"risk",strength:"high",status:"reviewing",domains:["commercial","privacy"],desc:"OneTrust shows consent re-confirmation lag increasing in Germany and France, putting outbound campaigns at GDPR risk by Q3.",action:"Run targeted re-consent campaign through medical channels.",evidence:"Re-confirmation rate down 14pp in DE, 9pp in FR over 8 weeks."},
+  {id:"sig-rx-feed-lag",name:"IQVIA Rx feed latency drift",type:"quality",strength:"medium",status:"new",domains:["commercial"],desc:"IQVIA Xponent weekly load arriving 36-48h later than SLA in 3 of last 5 weeks; degrades NBA freshness.",action:"Escalate to IQVIA delivery, consider buffer in NBA scoring window.",evidence:"3 of 5 recent loads exceeded SLA window."}
+];
+
+const policies = [
+  {id:"pol-gdpr",name:"General Data Protection Regulation (GDPR)",jurisdiction:"EU/EEA",type:"regulation",reqs:4,ctrls:3,owner:"Privacy Office",products:["dp-c360-hcp","dp-consent","dp-onekey","dp-medinfo"],keyControls:["Data residency enforcement (eu-west-1)","RTBF propagation within 30 days","Consent join filter for outbound use"]},
+  {id:"pol-hipaa",name:"HIPAA",jurisdiction:"US",type:"regulation",reqs:4,ctrls:3,owner:"Privacy Office",products:["dp-c360-hcp","dp-consent"],keyControls:["SHA-256 patient pseudonymization","Separate IAM boundary for patient data","PHI access audit logging (6yr retention)"]},
+  {id:"pol-sunshine-act",name:"Physician Payments Sunshine Act",jurisdiction:"US",type:"regulation",reqs:3,ctrls:3,owner:"Compliance",products:["dp-c360-hcp"],keyControls:["KMS-signed monthly ToV ledger","Compliance officer sign-off per filing","ToV timeliness monitoring (KPI-005)"]},
+  {id:"pol-efpia",name:"EFPIA Disclosure Code",jurisdiction:"EU (EU5)",type:"regulation",reqs:3,ctrls:2,owner:"Compliance",products:["dp-c360-hcp"],keyControls:["Shared ToV ledger with Sunshine Act","Country-level filing workflow (DE,FR,IT,ES,UK)"]},
+  {id:"pol-iqvia-license",name:"IQVIA Data Licensing Terms",jurisdiction:"Global",type:"license",reqs:4,ctrls:2,owner:"Procurement / External Data Ops",products:["dp-rx-feed","dp-onekey","dp-c360-hcp","dp-nba"],keyControls:["DUA tracking in Portal","Contract renewal monitoring (180d/90d alerts)"]}
+];
+
+const domainsList = [
+  {id:"dom-commercial",name:"Commercial",owner:"Commercial Leadership",role:"VP, Commercial Data & Analytics",products:["dp-c360-hcp","dp-rx-feed","dp-nba"],useCases:["uc-rep-targeting"],policies:["pol-iqvia-license"],stakeholders:["Sales Reps","Sales Operations","Brand Marketing","Commercial Analytics"]},
+  {id:"dom-medical",name:"Medical",owner:"Medical Affairs",role:"VP, Medical Affairs",products:["dp-c360-hcp","dp-medinfo"],useCases:["uc-msl-engagement","uc-pv-signal"],policies:["pol-gdpr","pol-hipaa"],stakeholders:["MSLs","Medical Affairs Leadership","Pharmacovigilance","Medical Information"]},
+  {id:"dom-privacy",name:"Privacy",owner:"Privacy Office",role:"Data Protection Officer",products:["dp-consent","dp-c360-hcp"],useCases:[],policies:["pol-gdpr","pol-hipaa"],stakeholders:["Data Protection Officer","Privacy Office","Legal"]},
+  {id:"dom-compliance",name:"Compliance",owner:"Compliance",role:"Chief Compliance Officer",products:["dp-c360-hcp"],useCases:["uc-sunshine-act"],policies:["pol-sunshine-act","pol-efpia","pol-iqvia-license"],stakeholders:["Compliance Officer","Legal","Internal Audit"]}
+];
+
+const accessScopes = [
+  {name:"c360_read_commercial",desc:"Sales ops, brand teams. Excludes AE linkage & inquiry text.",group:"pharmaco-sales-analytics",outputs:["Curated Tables","Engagement Stream","HCP API"]},
+  {name:"c360_read_medical",desc:"Medical Affairs and MSL ops. Adds inquiry text.",group:"pharmaco-medical-affairs",outputs:["Curated Tables","Engagement Stream","HCP API"]},
+  {name:"c360_read_compliance",desc:"Compliance, audit. Adds full ToV ledger.",group:"pharmaco-compliance",outputs:["Curated Tables","ToV Ledger"]},
+  {name:"c360_read_pv",desc:"Pharmacovigilance only. Adds adverse-event linkage.",group:"pharmaco-pv-ops",outputs:["Curated Tables"]}
+];
+
+const agents = [
+  {id:"agent-field-rep-copilot",name:"Field Rep Copilot",type:"ai_copilot",consumes:[{id:"api-c360-hcp",type:"API",scope:"c360_read_commercial"},{id:"dp-nba",type:"DataProduct",scope:"c360_read_commercial"}],useCase:"uc-rep-targeting",users:["Sales Representative","Key Account Manager"],capabilities:["HCP profile lookup with engagement history and segmentation","NBA recommendation surfacing with explanation codes","Weekly call plan generation based on territory and priority","Consent-aware channel suggestions (email, call, visit)","Real-time Rx trend summary per HCP"],constraints:["No access to medical inquiry free text","No access to adverse event linkage data","No access to patient-level data","No access to ToV ledger details","Must respect IQVIA license terms on Rx data"]},
+  {id:"agent-msl-assistant",name:"MSL Assistant",type:"ai_assistant",consumes:[{id:"dp-c360-hcp",type:"DataProduct",scope:"c360_read_medical"},{id:"dp-medinfo",type:"DataProduct",scope:"c360_read_medical"}],useCase:"uc-msl-engagement",users:["Medical Science Liaison","Medical Affairs Director"],capabilities:["KOL engagement history with interaction timeline","Medical inquiry tracking with topic codes and response status","HCP-HCO affiliation context for institutional engagement","Scientific exchange planning with topic gap analysis","AE-suspected inquiry flagging for awareness (read-only)"],constraints:["No access to commercial Rx detail (payer_channel redacted)","No access to ToV ledger","No access to patient-level data","Must not modify PV-flagged inquiry records after handoff","Inquiry free text accessible only under c360_read_medical scope"]}
+];
+
+const cdmTables = [
+  {layer:"HUB",name:"dim_hcp",desc:"Healthcare Professional master",cols:16,pk:"hcp_id, valid_from",scd2:true},
+  {layer:"HUB",name:"dim_hco",desc:"Healthcare Organization master",cols:15,pk:"hco_id, valid_from",scd2:true},
+  {layer:"HUB",name:"dim_hcp_hco_affiliation",desc:"HCP-HCO membership over time",cols:9,pk:"affiliation_id",scd2:true},
+  {layer:"HUB",name:"dim_product",desc:"PharmaCo drug / SKU master",cols:9,pk:"product_id",scd2:false},
+  {layer:"HUB",name:"dim_geography",desc:"Country / region / territory hierarchy",cols:6,pk:"geography_id",scd2:false},
+  {layer:"HUB",name:"dim_consent",desc:"Consent records (OneTrust)",cols:11,pk:"consent_id",scd2:true},
+  {layer:"ENGAGEMENT",name:"fact_engagement",desc:"Unified interactions (calls, email, web, events)",cols:16,pk:"engagement_id",scd2:false},
+  {layer:"ENGAGEMENT",name:"fact_sample_disbursement",desc:"Drug samples (Sunshine Act source)",cols:10,pk:"disbursement_id",scd2:false},
+  {layer:"ENGAGEMENT",name:"fact_transfer_of_value",desc:"Meals, fees, travel (ToV reporting)",cols:14,pk:"tov_id",scd2:false},
+  {layer:"ENGAGEMENT",name:"fact_medical_inquiry",desc:"Med-info questions and responses",cols:10,pk:"inquiry_id",scd2:false},
+  {layer:"COMMERCIAL",name:"fact_prescription",desc:"Rx claims (third-party, restricted)",cols:13,pk:"rx_id",scd2:false},
+  {layer:"COMMERCIAL",name:"fact_segmentation",desc:"Decile/segment per HCP per product",cols:8,pk:"segmentation_id",scd2:false},
+  {layer:"COMMERCIAL",name:"fact_nba_recommendation",desc:"Next-Best-Action scores per HCP",cols:11,pk:"recommendation_id",scd2:false},
+  {layer:"COMMERCIAL",name:"fact_adverse_event_link",desc:"Link engagement to PV case",cols:8,pk:"link_id",scd2:false}
+];
+
+const roadmap = [
+  {id:"M1",title:"ODP* Artifacts + Portal Registration",desc:"Domain config, ODPS/ODPC/ODPG/ODPV files, Portal pilot",period:"Weeks 1-2",completed:true},
+  {id:"M2",title:"CDM Build: HCP/HCO Masters + Engagement",desc:"dim_hcp, dim_hco, dim_hcp_hco_affiliation, fact_engagement pipelines",period:"Weeks 3-6",completed:true},
+  {id:"M3",title:"Rx Ingestion + Segmentation + Consent Join",desc:"IQVIA Xponent integration, segmentation model, consent filtering",period:"Weeks 7-10",completed:false},
+  {id:"M4",title:"ToV Pipeline + Sunshine Act / EFPIA Reports",desc:"fact_transfer_of_value, monthly freeze, KMS signing, filing workflows",period:"Weeks 11-12",completed:false},
+  {id:"M5",title:"NBA Model Integration + API Exposure",desc:"fact_nba_recommendation, HCP profile API, DynamoDB cache",period:"Weeks 13-16",completed:false},
+  {id:"M6",title:"Promote to Active; Close v1.0",desc:"GA readiness, marketplace listing via ODPC, AI assistant via ODPG",period:"Week 17",completed:false}
+];
+
+const graphEdges = [
+  {from:"dp-c360-hcp",to:"dp-onekey",type:"consumes"},{from:"dp-c360-hcp",to:"dp-rx-feed",type:"consumes"},{from:"dp-c360-hcp",to:"dp-consent",type:"consumes"},{from:"dp-c360-hcp",to:"dp-medinfo",type:"consumes"},{from:"dp-c360-hcp",to:"ds-crm-veeva-events",type:"consumes"},
+  {from:"dp-nba",to:"dp-c360-hcp",type:"consumes"},{from:"dp-c360-hcp",to:"api-c360-hcp",type:"exposes"},
+  {from:"uc-rep-targeting",to:"dp-c360-hcp",type:"uses"},{from:"uc-rep-targeting",to:"dp-nba",type:"uses"},{from:"uc-msl-engagement",to:"dp-c360-hcp",type:"uses"},{from:"uc-msl-engagement",to:"dp-medinfo",type:"uses"},{from:"uc-sunshine-act",to:"dp-c360-hcp",type:"uses"},{from:"uc-pv-signal",to:"dp-c360-hcp",type:"uses"},{from:"uc-pv-signal",to:"dp-medinfo",type:"uses"},
+  {from:"uc-rep-targeting",to:"bo-commercial-excellence",type:"supports"},{from:"uc-msl-engagement",to:"bo-commercial-excellence",type:"supports"},{from:"uc-sunshine-act",to:"bo-regulatory-excellence",type:"supports"},{from:"uc-pv-signal",to:"bo-regulatory-excellence",type:"supports"},
+  {from:"kpi-001",to:"dp-c360-hcp",type:"measures"},{from:"kpi-002",to:"dp-c360-hcp",type:"measures"},{from:"kpi-003",to:"uc-rep-targeting",type:"tracks"},{from:"kpi-004",to:"dp-nba",type:"measures"},{from:"kpi-005",to:"uc-sunshine-act",type:"tracks"},
+  {from:"dp-c360-hcp",to:"pol-gdpr",type:"governedBy"},{from:"dp-c360-hcp",to:"pol-hipaa",type:"governedBy"},{from:"dp-c360-hcp",to:"pol-sunshine-act",type:"governedBy"},{from:"dp-c360-hcp",to:"pol-efpia",type:"governedBy"},{from:"dp-rx-feed",to:"pol-iqvia-license",type:"governedBy"},{from:"dp-c360-hcp",to:"pol-iqvia-license",type:"governedBy"},
+  {from:"dp-c360-hcp",to:"dom-commercial",type:"alignsWith"},{from:"dp-c360-hcp",to:"dom-medical",type:"alignsWith"},{from:"dp-c360-hcp",to:"dom-privacy",type:"alignsWith"},{from:"dp-c360-hcp",to:"dom-compliance",type:"alignsWith"},
+  {from:"agent-field-rep-copilot",to:"api-c360-hcp",type:"consumes"},{from:"agent-field-rep-copilot",to:"dp-nba",type:"consumes"},{from:"agent-msl-assistant",to:"dp-c360-hcp",type:"consumes"},{from:"agent-msl-assistant",to:"dp-medinfo",type:"consumes"}
+];
+
+const graphNodes = [
+  {id:"dp-c360-hcp",label:"C360 HCP",type:"DataProduct",r:22},
+  {id:"dp-onekey",label:"OneKey",type:"DataProduct",r:14},{id:"dp-rx-feed",label:"Rx Feed",type:"DataProduct",r:14},{id:"dp-consent",label:"Consent",type:"DataProduct",r:14},{id:"dp-nba",label:"NBA",type:"DataProduct",r:14},{id:"dp-medinfo",label:"MedInfo",type:"DataProduct",r:14},
+  {id:"ds-crm-veeva-events",label:"CRM Veeva",type:"Dataset",r:10},
+  {id:"api-c360-hcp",label:"HCP API",type:"API",r:12},
+  {id:"uc-rep-targeting",label:"Rep Targeting",type:"UseCase",r:12},{id:"uc-msl-engagement",label:"MSL Engagement",type:"UseCase",r:12},{id:"uc-sunshine-act",label:"Sunshine Act",type:"UseCase",r:12},{id:"uc-pv-signal",label:"PV Signal",type:"UseCase",r:12},
+  {id:"bo-commercial-excellence",label:"Comm. Excellence",type:"BusinessObjective",r:14},{id:"bo-regulatory-excellence",label:"Reg. Excellence",type:"BusinessObjective",r:14},
+  {id:"kpi-001",label:"HCP Coverage",type:"KPI",r:9},{id:"kpi-002",label:"Consent Currency",type:"KPI",r:9},{id:"kpi-003",label:"Rep Adoption",type:"KPI",r:9},{id:"kpi-004",label:"NBA Precision",type:"KPI",r:9},{id:"kpi-005",label:"ToV Timeliness",type:"KPI",r:9},
+  {id:"pol-gdpr",label:"GDPR",type:"Policy",r:10},{id:"pol-hipaa",label:"HIPAA",type:"Policy",r:10},{id:"pol-sunshine-act",label:"Sunshine Act",type:"Policy",r:10},{id:"pol-efpia",label:"EFPIA",type:"Policy",r:10},{id:"pol-iqvia-license",label:"IQVIA License",type:"Policy",r:10},
+  {id:"dom-commercial",label:"Commercial",type:"Domain",r:10},{id:"dom-medical",label:"Medical",type:"Domain",r:10},{id:"dom-privacy",label:"Privacy",type:"Domain",r:10},{id:"dom-compliance",label:"Compliance",type:"Domain",r:10},
+  {id:"agent-field-rep-copilot",label:"Rep Copilot",type:"Agent",r:12},{id:"agent-msl-assistant",label:"MSL Assistant",type:"Agent",r:12}
+];
+
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+const titles={dashboard:"Dashboard",graph:"Product Graph",products:"Data Products",datasets:"Datasets",outputs:"Data Outputs",usecases:"Use Cases",kpis:"KPIs",objectives:"Business Objectives",signals:"Active Signals",policies:"Governance Policies",domains:"Domains",access:"Access Scopes",agents:"AI Agents",cdm:"Common Data Model",roadmap:"Delivery Roadmap"};
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    const page=item.dataset.page;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    document.getElementById('page-title').textContent=titles[page]||page;
+    if(page==='graph')initGraph();
+  });
+});
+
+// ============================================================================
+// RENDER FUNCTIONS
+// ============================================================================
+function renderProducts(){
+  const g=document.getElementById('products-grid');
+  g.innerHTML=products.map(p=>`
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">${p.name}</div><div class="card-subtitle">${p.productID} &middot; v${p.version}</div></div>
+        <span class="badge badge-${p.priority}">${p.priority}</span>
+      </div>
+      <div class="card-body">${p.desc}</div>
+      <div class="tag-row">
+        <span class="badge badge-${p.type==='derived'?'derived':'source'}">${p.type}</span>
+        <span class="badge badge-${p.governance}">${p.governance}</span>
+        ${p.domains.map(d=>`<span class="tag">${d}</span>`).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--gray-400)">Owner: ${p.owner}</div>
+    </div>`).join('');
+}
+
+function renderDatasets(){
+  const tb=document.querySelector('#datasets-table tbody');
+  tb.innerHTML=datasets.map(d=>`<tr>
+    <td><strong>${d.display}</strong><br><code>${d.name}</code></td>
+    <td><span class="tag">${d.domain}</span></td>
+    <td><span class="badge badge-${d.sensitivity}">${d.sensitivity}</span></td>
+    <td><code>${d.storage}</code><br><span style="font-size:11px;color:var(--gray-400)">${d.location}</span></td>
+    <td style="font-size:12px">${d.owner}</td>
+  </tr>`).join('');
+}
+
+function renderOutputs(){
+  const g=document.getElementById('outputs-grid');
+  g.innerHTML=outputs.map(o=>`
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">${o.display}</div><div class="card-subtitle">${o.id}</div></div>
+        <span class="badge badge-${o.type}">${o.type}</span>
+      </div>
+      <div class="card-body">${o.desc}</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--navy-600);font-weight:500">${o.sla}</div>
+      <div class="tag-row">${o.surfaces.map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--gray-400)">Scopes: ${o.scopes.join(', ')}${o.pii?' &middot; <span style="color:var(--red)">Contains PII</span>':''}</div>
+    </div>`).join('');
+}
+
+function renderUseCases(){
+  const g=document.getElementById('usecases-grid');
+  g.innerHTML=useCases.map(u=>`
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">${u.name}</div><div class="card-subtitle">${u.id}</div></div>
+        <div class="score-circle score-${u.value}">${u.score}</div>
+      </div>
+      <div class="card-body">
+        <div style="margin-bottom:8px"><strong>Decision:</strong> ${u.decision}</div>
+        <div style="margin-bottom:8px"><strong>Expected outcome:</strong> ${u.outcome}</div>
+      </div>
+      <div class="tag-row">
+        <span class="badge badge-${u.priority}">${u.priority}</span>
+        <span class="tag">Effort: ${u.effort}</span>
+        <span class="tag">${u.category}</span>
+        ${u.domains.map(d=>`<span class="tag">${d}</span>`).join('')}
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--gray-400)">KPIs: ${u.kpis.join(', ')} &middot; Stakeholders: ${u.stakeholders.join(', ')}</div>
+    </div>`).join('');
+}
+
+function renderKPIs(){
+  const c=document.getElementById('kpis-container');
+  c.innerHTML=kpis.map(k=>{
+    const pct=Math.min((k.current/k.target)*100,100);
+    const color=pct>=95?'var(--green)':pct>=80?'var(--amber)':'var(--red)';
+    return `<div class="kpi-card">
+      <div class="kpi-header"><div class="kpi-name">${k.id}: ${k.name}</div><div class="kpi-target">${k.current}${k.unit} / ${k.target}${k.unit} target</div></div>
+      <div class="kpi-bar-bg"><div class="kpi-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="kpi-meta"><span>Direction: ${k.direction}</span><span>Frequency: ${k.frequency}</span><span>Owner: ${k.owner}</span></div>
+      <div style="margin-top:6px;font-size:11px;color:var(--gray-400)">Calculation: ${k.calc}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderObjectives(){
+  const g=document.getElementById('objectives-grid');
+  g.innerHTML=objectives.map(o=>`
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">${o.name}</div><div class="card-subtitle">${o.id}</div></div><span class="badge badge-${o.priority}">${o.priority}</span></div>
+      <div class="card-body">${o.desc}</div>
+      <div style="margin-top:12px"><strong style="font-size:12px;color:var(--gray-500)">Expected Outcomes:</strong><ul class="check-list">${o.outcomes.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--gray-400)">Owner: ${o.owner} &middot; KPIs: ${o.kpis.join(', ')}</div>
+    </div>`).join('');
+}
+
+function renderSignals(){
+  const g=document.getElementById('signals-grid');
+  g.innerHTML=signals.map(s=>`
+    <div class="card" style="border-left:4px solid ${s.type==='risk'?'var(--red)':'var(--amber)'}">
+      <div class="card-header"><div><div class="card-title">${s.name}</div><div class="card-subtitle">${s.id}</div></div><span class="badge badge-${s.type}">${s.type}</span></div>
+      <div class="card-body">${s.desc}</div>
+      <div style="margin-top:10px;padding:10px;background:var(--gray-50);border-radius:6px;font-size:12px"><strong>Evidence:</strong> ${s.evidence}</div>
+      <div style="margin-top:8px;padding:10px;background:var(--blue-bg);border-radius:6px;font-size:12px"><strong>Recommended Action:</strong> ${s.action}</div>
+      <div class="tag-row"><span class="badge badge-${s.status}">${s.status}</span><span class="tag">Strength: ${s.strength}</span>${s.domains.map(d=>`<span class="tag">${d}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function renderPolicies(){
+  const g=document.getElementById('policies-grid');
+  g.innerHTML=policies.map(p=>`
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">${p.name}</div><div class="card-subtitle">${p.id}</div></div><span class="badge badge-${p.type}">${p.type}</span></div>
+      <div class="card-body">
+        <div class="detail-row"><div class="detail-label">Jurisdiction</div><div class="detail-value">${p.jurisdiction}</div></div>
+        <div class="detail-row"><div class="detail-label">Requirements</div><div class="detail-value">${p.reqs} requirements, ${p.ctrls} controls</div></div>
+        <div class="detail-row"><div class="detail-label">Owner</div><div class="detail-value">${p.owner}</div></div>
+      </div>
+      <div style="margin-top:10px"><strong style="font-size:12px;color:var(--gray-500)">Key Controls:</strong><ul class="check-list">${p.keyControls.map(c=>`<li>${c}</li>`).join('')}</ul></div>
+      <div class="tag-row">${p.products.map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function renderDomains(){
+  const g=document.getElementById('domains-grid');
+  g.innerHTML=domainsList.map(d=>`
+    <div class="card">
+      <div class="card-header"><div><div class="card-title">${d.name}</div><div class="card-subtitle">${d.id}</div></div><span class="badge badge-active">active</span></div>
+      <div class="card-body">
+        <div class="detail-row"><div class="detail-label">Owner</div><div class="detail-value">${d.owner}<br><span style="font-size:11px;color:var(--gray-400)">${d.role}</span></div></div>
+        <div class="detail-row"><div class="detail-label">Products</div><div class="detail-value">${d.products.map(x=>`<span class="tag">${x}</span>`).join(' ')}</div></div>
+        <div class="detail-row"><div class="detail-label">Use Cases</div><div class="detail-value">${d.useCases.length?d.useCases.map(x=>`<span class="tag">${x}</span>`).join(' '):'<span style="color:var(--gray-400)">None</span>'}</div></div>
+        <div class="detail-row"><div class="detail-label">Policies</div><div class="detail-value">${d.policies.map(x=>`<span class="tag">${x}</span>`).join(' ')}</div></div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--gray-400)">Stakeholders: ${d.stakeholders.join(', ')}</div>
+    </div>`).join('');
+}
+
+function renderAccess(){
+  const g=document.getElementById('access-grid');
+  g.innerHTML=accessScopes.map(a=>`
+    <div class="card">
+      <div class="card-header"><div><div class="card-title" style="font-family:monospace;font-size:14px">${a.name}</div></div></div>
+      <div class="card-body">${a.desc}</div>
+      <div style="margin-top:10px">
+        <div class="detail-row"><div class="detail-label">Members Group</div><div class="detail-value"><code>${a.group}</code></div></div>
+        <div class="detail-row"><div class="detail-label">Accessible Outputs</div><div class="detail-value">${a.outputs.map(x=>`<span class="tag">${x}</span>`).join(' ')}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderAgents(){
+  const c=document.getElementById('agents-container');
+  c.innerHTML=agents.map(a=>`
+    <div class="detail-panel" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div><h4 style="margin:0">${a.name}</h4><span style="font-size:12px;color:var(--gray-400)">${a.id} &middot; ${a.type}</span></div>
+        <span class="badge badge-active">active</span>
+      </div>
+      <div class="two-col">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Consumes</div>
+          ${a.consumes.map(x=>`<div style="background:var(--blue-bg);border-radius:6px;padding:8px 12px;margin-bottom:6px;font-size:12px"><strong>${x.id}</strong> (${x.type})<br>Scope: <code>${x.scope}</code></div>`).join('')}
+          <div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Users</div>
+          <div class="tag-row">${a.users.map(u=>`<span class="tag">${u}</span>`).join('')}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Capabilities</div>
+          <ul class="check-list">${a.capabilities.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Constraints</div>
+          <ul class="check-list constraint-list">${a.constraints.map(x=>`<li>${x}</li>`).join('')}</ul>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderCDM(){
+  const c=document.getElementById('cdm-container');
+  const layers=["HUB","ENGAGEMENT","COMMERCIAL"];
+  const colors={HUB:"var(--navy-500)",ENGAGEMENT:"var(--green)",COMMERCIAL:"var(--amber)"};
+  c.innerHTML=layers.map(layer=>{
+    const tables=cdmTables.filter(t=>t.layer===layer);
+    return `<div class="section-header" style="margin-top:20px"><h3 style="color:${colors[layer]}">${layer} Layer</h3></div>
+    <div class="table-wrap"><table><thead><tr><th>Table</th><th>Description</th><th>Columns</th><th>Primary Key</th><th>SCD-2</th></tr></thead><tbody>
+    ${tables.map(t=>`<tr><td><code>${t.name}</code></td><td>${t.desc}</td><td style="text-align:center">${t.cols}</td><td><code>${t.pk}</code></td><td>${t.scd2?'<span class="badge badge-active">Yes</span>':'-'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  }).join('');
+}
+
+function renderRoadmap(){
+  const c=document.getElementById('roadmap-container');
+  c.innerHTML=roadmap.map(m=>`
+    <div class="timeline-item ${m.completed?'completed':''}">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="timeline-title">${m.id}: ${m.title}</div>
+        <div class="timeline-desc">${m.desc}</div>
+        <div class="timeline-period">${m.period} ${m.completed?'<span class="badge badge-active" style="margin-left:8px">Completed</span>':''}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================================
+// GRAPH VISUALIZATION
+// ============================================================================
+const typeColors={DataProduct:"#1e4d8c",Dataset:"#16a34a",UseCase:"#d97706",KPI:"#dc2626",BusinessObjective:"#7c3aed",Policy:"#0891b2",Domain:"#475569",Agent:"#c026d3",API:"#ea580c"};
+const edgeColors={consumes:"#1e4d8c",uses:"#d97706",supports:"#7c3aed",measures:"#dc2626",tracks:"#dc2626",contributesTo:"#7c3aed",governedBy:"#0891b2",alignsWith:"#475569",exposes:"#ea580c",dependsOn:"#1e4d8c"};
+
+let simulation,svgG,zoom;
+
+function initGraph(){
+  const container=document.getElementById('graph-container');
+  const svg=d3.select('#graph-svg');
+  svg.selectAll('*').remove();
+  const w=container.clientWidth,h=container.clientHeight;
+  svg.attr('width',w).attr('height',h);
+
+  zoom=d3.zoom().scaleExtent([0.3,3]).on('zoom',e=>svgG.attr('transform',e.transform));
+  svg.call(zoom);
+  svgG=svg.append('g');
+
+  svg.append('defs').append('marker').attr('id','arrowhead').attr('viewBox','0 -5 10 10').attr('refX',20).attr('refY',0).attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto').append('path').attr('d','M0,-4L10,0L0,4').attr('fill','#94a3b8');
+
+  const nodes=graphNodes.map(n=>({...n}));
+  const links=graphEdges.map(e=>({source:e.from,target:e.to,type:e.type}));
+
+  simulation=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(d=>d.id).distance(100))
+    .force('charge',d3.forceManyBody().strength(-300))
+    .force('center',d3.forceCenter(w/2,h/2))
+    .force('collision',d3.forceCollide().radius(d=>d.r+8));
+
+  const link=svgG.append('g').selectAll('line').data(links).join('line')
+    .attr('stroke',d=>edgeColors[d.type]||'#94a3b8').attr('stroke-width',1.5).attr('stroke-opacity',0.4).attr('marker-end','url(#arrowhead)');
+
+  const node=svgG.append('g').selectAll('g').data(nodes).join('g').call(d3.drag().on('start',dragStart).on('drag',dragged).on('end',dragEnd));
+
+  node.append('circle').attr('r',d=>d.r).attr('fill',d=>typeColors[d.type]||'#6b7280').attr('stroke','#fff').attr('stroke-width',2).style('cursor','pointer');
+  node.append('text').attr('class','node-label').attr('dy',d=>d.r+12).attr('text-anchor','middle').text(d=>d.label);
+
+  node.on('mouseover',(e,d)=>{
+    const tt=document.getElementById('tooltip');
+    const incoming=links.filter(l=>(l.target.id||l.target)===d.id).map(l=>`${l.source.id||l.source} → ${l.type}`);
+    const outgoing=links.filter(l=>(l.source.id||l.source)===d.id).map(l=>`${l.type} → ${l.target.id||l.target}`);
+    tt.innerHTML=`<strong>${d.label}</strong><br><span style="opacity:.7">${d.type} &middot; ${d.id}</span>${outgoing.length?'<br><br><strong>Outgoing:</strong><br>'+outgoing.join('<br>'):''}${incoming.length?'<br><br><strong>Incoming:</strong><br>'+incoming.join('<br>'):''}`;
+    tt.style.display='block';
+    tt.style.left=(e.pageX+12)+'px';
+    tt.style.top=(e.pageY-10)+'px';
+  }).on('mousemove',(e)=>{
+    const tt=document.getElementById('tooltip');
+    tt.style.left=(e.pageX+12)+'px';
+    tt.style.top=(e.pageY-10)+'px';
+  }).on('mouseout',()=>{document.getElementById('tooltip').style.display='none'});
+
+  simulation.on('tick',()=>{
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+
+  function dragStart(e,d){if(!e.active)simulation.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y}
+  function dragged(e,d){d.fx=e.x;d.fy=e.y}
+  function dragEnd(e,d){if(!e.active)simulation.alphaTarget(0);d.fx=null;d.fy=null}
+}
+
+function resetGraph(){
+  const svg=d3.select('#graph-svg');
+  svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
+}
+function centerGraph(){resetGraph()}
+
+// ============================================================================
+// INIT
+// ============================================================================
+renderProducts();renderDatasets();renderOutputs();renderUseCases();renderKPIs();
+renderObjectives();renderSignals();renderPolicies();renderDomains();renderAccess();
+renderAgents();renderCDM();renderRoadmap();
+</script>
+</body>
+</html>
